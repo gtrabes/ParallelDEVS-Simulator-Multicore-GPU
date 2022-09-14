@@ -1,1 +1,1 @@
-# Cuda-example
+# DEVS-CUDA
