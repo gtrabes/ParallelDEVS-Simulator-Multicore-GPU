@@ -29,7 +29,9 @@
     	//double state;
     	double *x, *y, alpha, time, z, w, last_time, next_time;
     	size_t output_flops, transition_flops;
-    	bool are_inports_empty;
+    	bool is_inbag_empty;
+    	double in_bag[9];
+    	double out_bag;
 
     	Atomic(size_t out_flops, size_t trans_flops){
     		next_time = 0;
@@ -37,9 +39,13 @@
     		z = 0.0;
     		w = 3.14;
     		alpha = 2.0;
-    		are_inports_empty = true;
+    		is_inbag_empty = true;
     		output_flops = out_flops;
     		transition_flops = trans_flops;
+    		for(size_t i = 0; i < 9; i++){
+    			in_bag[i] = -1.0;
+    		}
+    		out_bag = -1.0;
     	}
 
 		/**
@@ -112,12 +118,21 @@
 		* @param s reference to the current generator model state.
 		* @return the sigma value.
 		*/
-		__host__ __device__ bool inports_empty() {
-			return are_inports_empty;
+		__host__ __device__ bool inbag_empty() {
+			for(size_t i = 0; i < 9; i++){
+				if(in_bag[i] != -1.0){
+					is_inbag_empty == false;
+				}
+			}
+			return is_inbag_empty;
 		}
 
 
-		__host__ __device__ void clear_ports() {
+		__host__ __device__ void clear_bags() {
+			for(size_t i = 0; i < 9; i++) {
+				in_bag[i] = -1.0;
+			}
+			out_bag = -1.0;
 		}
 
     };

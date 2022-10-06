@@ -86,12 +86,37 @@ int main(int argc, char **argv) {
 		atomic_array[i] = Atomic(output_flops, transition_flops);
 	}
 
-	int blockSize = 256;
-	int numBlocks = (n_atomics + blockSize - 1) / blockSize;
+	//create data structure for couplings
+	size_t **couplings;
+
+	//allocate couplings matrix
+	couplings = (size_t**)malloc(n_atomics * sizeof(size_t*));
+
+	for(int i = 0; i < n_atomics; i++){
+		couplings[i] = (size_t *)malloc(9 * sizeof(size_t));
+	}
+
+	//create data structure for couplings
+	int *n_couplings;
+
+	//allocate couplings matrix
+	n_couplings = (int *)malloc(n_atomics * sizeof(int));
+
+	//fill data structure for couplings
+	for(size_t i=0; i < n_atomics; i++){
+		size_t aux = i-5;
+		for(size_t j = 0; j < 9; j++){
+			if (aux+j > 0 && aux+j < n_atomics){
+				couplings[i][j] = aux+j;
+				n_couplings[i]++;
+			}
+		}
+	}
+
 
 	sequential_begin = hclock::now();
 
-	sequential_simulation(n_atomics, atomic_array, simulation_time);
+	sequential_simulation(n_atomics, atomic_array, n_couplings, couplings, simulation_time);
 
 	sequential_end = hclock::now();
 

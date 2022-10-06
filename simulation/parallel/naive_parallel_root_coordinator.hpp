@@ -27,7 +27,7 @@
 #include <thread>
 #include "parallel_helpers.hpp"
 
-void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t sim_time,
+void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, int* n_couplings, size_t** couplings, size_t sim_time,
 	size_t num_threads = std::thread::hardware_concurrency()) {
 
 	double next_time = 0, last_time = 0;
@@ -57,16 +57,22 @@ void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t s
 			//end Step 1
 
 			// Step 2: execute output functions
-			//for(size_t i=0; i<n_subcomponents;i++){
-			//	subcomponents.at[]->collection(timeNext);
-			//}
+			#pragma omp master
+			{
+				for(size_t i=0; i<n_subcomponents;i++){
+					for(int j=0; j<n_couplings[i]; j++ ){
+						subcomponents[i].insert_in_bag(subcomponents[couplings[i][j]].get_out_bag());
+					}
+				}
+			}
+			#pragma omp barrier
 			//end Step 2
 
 			//Step 3: execute state transition
 			#pragma omp for schedule(static)
 			for(size_t i=0; i<n_subcomponents;i++){
 				if (subcomponents[i].get_next_time() == next_time) {
-					if(subcomponents[i].inports_empty() == true) {
+					if(subcomponents[i].inbag_empty() == true) {
 						subcomponents[i].internal_transition();
 					} else {
 						subcomponents[i].confluent_transition(next_time - last_time);
@@ -75,14 +81,14 @@ void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t s
 					subcomponents[i].last_time = last_time;
 					subcomponents[i].next_time = last_time + subcomponents[i].time_advance();
 				} else {
-					if(subcomponents[i].inports_empty() == false){
+					if(subcomponents[i].inbag_empty() == false){
 						subcomponents[i].external_transition(next_time - last_time);
 						last_time = next_time;
 						subcomponents[i].last_time = last_time;
 						subcomponents[i].next_time = last_time + subcomponents[i].time_advance();
 					}
 				}
-				subcomponents[i].clear_ports();
+				subcomponents[i].clear_bags();
 			}
 			#pragma omp barrier
 			//end Step 3

@@ -26,7 +26,7 @@
 
 #include <thread>
 
-void sequential_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t sim_time) {
+void sequential_simulation(size_t n_subcomponents, Atomic* subcomponents, int* n_couplings, size_t** couplings , size_t sim_time) {
 	double next_time = 0, last_time = 0;
 
 	while(next_time < sim_time) {
@@ -40,15 +40,17 @@ void sequential_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t
 		//end Step 1
 
 		// Step 2: execute output functions
-		//for(size_t i=0; i<n_subcomponents;i++){
-		//	subcomponents.at[]->collection(timeNext);
-		//}
+		for(size_t i=0; i<n_subcomponents;i++){
+			for(int j=0; j<n_couplings[i]; j++ ){
+				subcomponents[i].insert_in_bag(subcomponents[couplings[i][j]].get_out_bag());
+			}
+		}
 		//end Step 2
 
 		//Step 3: execute state transition
 		for(size_t i=0; i<n_subcomponents;i++){
 			if (subcomponents[i].get_next_time() == next_time) {
-				if(subcomponents[i].inports_empty() == true) {
+				if(subcomponents[i].inbag_empty() == true) {
 					subcomponents[i].internal_transition();
 				} else {
 					subcomponents[i].confluent_transition(next_time - last_time);
@@ -57,14 +59,14 @@ void sequential_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t
 				subcomponents[i].last_time = last_time;
 				subcomponents[i].next_time = last_time + subcomponents[i].time_advance();
 			} else {
-				if(subcomponents[i].inports_empty() == false){
+				if(subcomponents[i].inbag_empty() == false){
 					subcomponents[i].external_transition(next_time - last_time);
 					last_time = next_time;
 					subcomponents[i].last_time = last_time;
 					subcomponents[i].next_time = last_time + subcomponents[i].time_advance();
 				}
 			}
-			subcomponents[i].clear_ports();
+			subcomponents[i].clear_bags();
 		}
 		//end Step 3
 

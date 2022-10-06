@@ -68,24 +68,24 @@ __global__ void gpu_transition(size_t n_subcomponents, Atomic* subcomponents, do
 
 	if (i < n_subcomponents){
 
-		//if (subcomponents[i].next_time == next_time) {
-			//if(subcomponents[i].inports_empty() == true) {
+		if (subcomponents[i].next_time == next_time) {
+			if(subcomponents[i].inbag_empty() == true) {
 				subcomponents[i].internal_transition();
-			//} else {
-			//	subcomponents[i].confluent_transition(next_time - last_time);
-			//}
+			} else {
+				subcomponents[i].confluent_transition(next_time - last_time);
+			}
 			//last_time = next_time;
 			subcomponents[i].last_time = next_time;
 			subcomponents[i].next_time = next_time + subcomponents[i].time_advance();
-		//}// else {
-		/*	if(subcomponents[i].inports_empty() == false){
+		} else {
+			if(subcomponents[i].inbag_empty() == false){
 				subcomponents[i].external_transition(next_time - last_time);
 				//last_time = next_time;
 				subcomponents[i].last_time = next_time;
 				subcomponents[i].next_time = next_time + subcomponents[i].time_advance();
-			}*/
-		//}
-		subcomponents[i].clear_ports();
+			}
+		}
+		subcomponents[i].clear_bags();
 
 /*
 		subcomponents[i].internal_transition();
@@ -110,9 +110,10 @@ __global__ void gpu_next_time(size_t n_subcomponents, Atomic* subcomponents, dou
 	//synchronize threads in this block
 	__syncthreads();
 
+
 	//Equivalent to divided by 2
 	//size_t jump = blockDim.x>>1;
-	int jump = blockDim.x>>1;
+	size_t jump = blockDim.x>>1;
 	//int jump = blockDim.x/2;
 
 	while(jump > 0) {

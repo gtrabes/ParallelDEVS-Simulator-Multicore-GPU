@@ -85,49 +85,13 @@ __global__ void gpu_transition(size_t n_subcomponents, Atomic* subcomponents, do
 				subcomponents[i].next_time = next_time + subcomponents[i].time_advance();
 			}*/
 		//}
-		subcomponents[i].clear_ports();
+		subcomponents[i].clear_bags();
 
 /*
 		subcomponents[i].internal_transition();
 		subcomponents[i].last_time = next_time;
 		subcomponents[i].next_time = next_time + subcomponents[i].time_advance();
 */
-	}
-
-}
-
-
-__global__ void gpu_next_time(size_t n_subcomponents, Atomic* subcomponents, double* partial_next_times) {
-
-	__shared__ double blockCache[threadsPerBlock];
-	size_t tid = blockIdx.x*blockDim.x + threadIdx.x; ;
-	size_t blockIndex = threadIdx.x;
-
-	//set blockCache values
-	if (tid < n_subcomponents){
-		blockCache[blockIndex] = subcomponents[tid].next_time;
-	}
-	//synchronize threads in this block
-	__syncthreads();
-
-	//Equivalent to divided by 2
-	//size_t jump = blockDim.x>>1;
-	int jump = blockDim.x>>1;
-	//int jump = blockDim.x/2;
-
-	while(jump > 0) {
-		if(blockIndex < jump){
-			if(blockCache[blockIndex] > blockCache[blockIndex+jump]) {
-				blockCache[blockIndex] = blockCache[blockIndex+jump];
-			}
-		}
-		__syncthreads();
-		jump = jump>>1;
-		//jump/=2;
-	}
-
-	if(blockIndex == 0){
-		partial_next_times[blockIdx.x] = blockCache[0];
 	}
 
 }
