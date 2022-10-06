@@ -26,8 +26,8 @@
 
 #include <iostream>
 #include <chrono>
-#include "atomic.cuh"
-#include "root_coordinator.cu"
+#include "../modeling/atomic.hpp"
+#include "../simulation/sequential/sequential_root_coordinator.hpp"
 
 using namespace std;
 using hclock=std::chrono::high_resolution_clock;
@@ -79,7 +79,8 @@ int main(int argc, char **argv) {
 	}
 */
 	// Allocate Unified Memory -- accessible from CPU or GPU
-	cudaMallocManaged(&atomic_array, n_atomics*sizeof(Atomic));
+	//cudaMallocManaged(&atomic_array, n_atomics*sizeof(Atomic));
+	atomic_array = (Atomic*) malloc(n_atomics*sizeof(Atomic));
 
 	for(size_t i = 0; i < n_atomics; i++) {
 		atomic_array[i] = Atomic(output_flops, transition_flops);
@@ -96,33 +97,6 @@ int main(int argc, char **argv) {
 
 	// calculate and print time
 	std::cout << "Sequential time:   "<< std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(sequential_end - sequential_begin).count() << std::endl;
-
-	for(size_t i = 0; i < n_atomics; i++) {
-		atomic_array[i] = Atomic(output_flops, transition_flops);
-	}
-
-	parallel_begin = hclock::now();
-
-	parallel_simulation(n_atomics, atomic_array, simulation_time);
-
-	parallel_end = hclock::now();
-
-	// calculate and print time
-	std::cout << "CPU parallel time: "<< std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(parallel_end - parallel_begin).count() << std::endl;
-
-	gpu_begin = hclock::now();
-
-	// Launch kernel on the GPU
-	//gpu_simulation<<<numBlocks, blockSize>>>(n_atomics, atomic_array, simulation_time);
-	gpu_simulation(n_atomics, atomic_array, simulation_time);
-
-	// Wait for GPU to finish before accessing on host
-	cudaDeviceSynchronize();
-
-	gpu_end = hclock::now();
-
-	// calculate and print time
-	std::cout << "GPU parallel time: "<< std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(gpu_end - gpu_begin).count() << std::endl;
 
 	return 0;
 }
