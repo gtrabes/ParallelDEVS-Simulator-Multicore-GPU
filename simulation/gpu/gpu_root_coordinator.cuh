@@ -28,7 +28,7 @@
 
 const int threadsPerBlock = 256;
 
-__global__ void gpu_output(size_t n_subcomponents, Atomic* subcomponents, double next_time) {
+__global__ void gpu_output(size_t n_subcomponents, AtomicGPU* subcomponents, double next_time) {
 	//printf("Hello World from GPU!\n");
 /*
 	size_t index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -54,7 +54,24 @@ __global__ void gpu_output(size_t n_subcomponents, Atomic* subcomponents, double
 }
 
 
-__global__ void gpu_transition(size_t n_subcomponents, Atomic* subcomponents, double next_time, double last_time) {
+
+__global__ void gpu_route_messages(size_t n_subcomponents, AtomicGPU* subcomponents, size_t* n_couplings, size_t** couplings) {
+
+	size_t i = blockIdx.x*blockDim.x + threadIdx.x;
+	if (i < n_subcomponents){
+		for(int j=0; j<n_couplings[i]; j++ ){
+			subcomponents[i].insert_in_bag(subcomponents[couplings[i][j]].get_out_bag());
+		}
+	}
+
+
+}
+
+
+
+
+
+__global__ void gpu_transition(size_t n_subcomponents, AtomicGPU* subcomponents, double next_time, double last_time) {
 	//printf("Hello World from GPU!\n");
 	//size_t index = blockIdx.x * blockDim.x + threadIdx.x;
 	//size_t stride = blockDim.x * gridDim.x;
@@ -97,7 +114,7 @@ __global__ void gpu_transition(size_t n_subcomponents, Atomic* subcomponents, do
 }
 
 
-__global__ void gpu_next_time(size_t n_subcomponents, Atomic* subcomponents, double* partial_next_times) {
+__global__ void gpu_next_time(size_t n_subcomponents, AtomicGPU* subcomponents, double* partial_next_times) {
 
 	__shared__ double blockCache[threadsPerBlock];
 	size_t tid = blockIdx.x*blockDim.x + threadIdx.x; ;
@@ -133,7 +150,7 @@ __global__ void gpu_next_time(size_t n_subcomponents, Atomic* subcomponents, dou
 
 }
 
-void gpu_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t simulation_time) {
+void gpu_simulation(size_t n_subcomponents, AtomicGPU* subcomponents, size_t* n_couplings, size_t** couplings , size_t simulation_time) {
 	//printf("Hello World from GPU!\n");
 	//size_t index = blockIdx.x * blockDim.x + threadIdx.x;
 	//size_t stride = blockDim.x * gridDim.x;
@@ -171,7 +188,7 @@ void gpu_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t simula
 		// End Step 1
 
 		// Launch Step 2 on the GPU
-		//gpu_propaget<<<numBlocks, blockSize>>>(n_subcomponents, subcomponents, next_time, last_time);
+		gpu_route_messages<<<numBlocks, blockSize>>>(n_subcomponents, subcomponents, n_couplings, couplings);
 		// Wait for GPU to finish
 		//cudaDeviceSynchronize();
 		// End Step 2

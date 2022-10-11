@@ -28,7 +28,7 @@
 
 const int threadsPerBlock = 256;
 
-__global__ void gpu_output(size_t n_subcomponents, Atomic* subcomponents, double next_time) {
+__global__ void gpu_output(size_t n_subcomponents, AtomicGPU* subcomponents, double next_time) {
 	//printf("Hello World from GPU!\n");
 /*
 	size_t index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -54,7 +54,7 @@ __global__ void gpu_output(size_t n_subcomponents, Atomic* subcomponents, double
 }
 
 
-__global__ void gpu_transition(size_t n_subcomponents, Atomic* subcomponents, double next_time, double last_time) {
+__global__ void gpu_transition(size_t n_subcomponents, AtomicGPU* subcomponents, double next_time, double last_time) {
 	//printf("Hello World from GPU!\n");
 	//size_t index = blockIdx.x * blockDim.x + threadIdx.x;
 	//size_t stride = blockDim.x * gridDim.x;
@@ -96,7 +96,8 @@ __global__ void gpu_transition(size_t n_subcomponents, Atomic* subcomponents, do
 
 }
 
-void gpu_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t simulation_time) {
+
+void gpu_simulation(size_t n_subcomponents, AtomicGPU* subcomponents, size_t* n_couplings, size_t** couplings , size_t simulation_time) {
 	//printf("Hello World from GPU!\n");
 	//size_t index = blockIdx.x * blockDim.x + threadIdx.x;
 	//size_t stride = blockDim.x * gridDim.x;
@@ -138,6 +139,15 @@ void gpu_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t simula
 		// Wait for GPU to finish
 		//cudaDeviceSynchronize();
 		// End Step 2
+
+		// Step 2: route messages
+		for(size_t i=0; i<n_subcomponents;i++){
+			for(int j=0; j<n_couplings[i]; j++ ){
+				subcomponents[i].insert_in_bag(subcomponents[couplings[i][j]].get_out_bag());
+			}
+		}
+		//end Step 2
+
 
 		// Launch Step 3 on the GPU
 		gpu_transition<<<numBlocks, blockSize>>>(n_subcomponents, subcomponents, next_time, last_time);

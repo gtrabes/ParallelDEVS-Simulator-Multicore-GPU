@@ -17,6 +17,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#ifndef ATOMIC
+#define ATOMIC
+
 	/**
 	 * @brief DEVS atomic model.
 	 *
@@ -31,7 +34,7 @@
     	bool is_inbag_empty;
     	double in_bag[9];
     	double out_bag;
-    	int num_messages_received;
+    	size_t num_messages_received;
 
     	Atomic(size_t out_flops, size_t trans_flops){
     		next_time = 0;
@@ -42,7 +45,6 @@
     		is_inbag_empty = true;
     		output_flops = out_flops;
     		transition_flops = trans_flops;
-
     		for(size_t i = 0; i < 9; i++){
     			in_bag[i] = -1.0;
     		}
@@ -170,3 +172,5 @@
 
 
     };
+
+#endif //CADMIUM_CORE_SIMULATION_ABS_SIMULATOR_HPP_
