@@ -25,6 +25,7 @@
  */
 
 #include <thread>
+#include <cmath>
 
 const int threadsPerBlock = 256;
 
@@ -117,7 +118,7 @@ __global__ void gpu_transition(size_t n_subcomponents, AtomicGPU* subcomponents,
 __global__ void gpu_next_time(size_t n_subcomponents, AtomicGPU* subcomponents, double* partial_next_times) {
 
 	__shared__ double blockCache[threadsPerBlock];
-	size_t tid = blockIdx.x*blockDim.x + threadIdx.x; ;
+	size_t tid = blockIdx.x*blockDim.x + threadIdx.x;
 	size_t blockIndex = threadIdx.x;
 
 	//set blockCache values
@@ -132,6 +133,15 @@ __global__ void gpu_next_time(size_t n_subcomponents, AtomicGPU* subcomponents, 
 	//size_t jump = blockDim.x>>1;
 	size_t jump = blockDim.x>>1;
 	//int jump = blockDim.x/2;
+/*
+	size_t jump;
+
+	if(n_subcomponents < blockDim.x){
+		jump = n_subcomponents>>1;
+	} else {
+		jump = blockDim.x>>1;
+	}
+*/
 
 	while(jump > 0) {
 		if(blockIndex < jump){
@@ -171,30 +181,44 @@ void gpu_simulation(size_t n_subcomponents, AtomicGPU* subcomponents, size_t* n_
 
 	double next_time = 0, last_time = 0;
 
-	int blockSize = 256;
-	int numBlocks = (n_subcomponents + blockSize - 1) / blockSize;
+	//int blockSize = 256;
+	//int blockSize = 1;
+	//int numBlocks;
+	int numBlocks = (n_subcomponents + threadsPerBlock - 1) / threadsPerBlock;
+
+//	int numBlocks = 10;
+
+	if(n_subcomponents < numBlocks){
+//		numBlocks = n_subcomponents;
+	}
 
 	double *partial_next_times;
 
 	// Allocate Unified Memory -- accessible from CPU or GPU
 	cudaMallocManaged(&partial_next_times, numBlocks*sizeof(double));
 
+//	const double blah = INFINITY;
+/*
+	for(size_t i=0; i<n_subcomponents; i++){
+		partial_next_times[0] = INFINITY;
+	}
+*/
 	while(next_time < simulation_time) {
 
 		// Launch Step 1 on the GPU
-		gpu_output<<<numBlocks, blockSize>>>(n_subcomponents, subcomponents, next_time);
+		gpu_output<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, next_time);
 		// Wait for GPU to finish
 		//cudaDeviceSynchronize();
 		// End Step 1
 
 		// Launch Step 2 on the GPU
-		gpu_route_messages<<<numBlocks, blockSize>>>(n_subcomponents, subcomponents, n_couplings, couplings);
+		gpu_route_messages<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, n_couplings, couplings);
 		// Wait for GPU to finish
 		//cudaDeviceSynchronize();
 		// End Step 2
 
 		// Launch Step 3 on the GPU
-		gpu_transition<<<numBlocks, blockSize>>>(n_subcomponents, subcomponents, next_time, last_time);
+		gpu_transition<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, next_time, last_time);
 		// Wait for GPU to finish
 		//cudaDeviceSynchronize();
 		// End Step 3
@@ -209,20 +233,30 @@ void gpu_simulation(size_t n_subcomponents, AtomicGPU* subcomponents, size_t* n_
 */
 
 		// Launch Step 4 on the GPU
-		gpu_next_time<<<numBlocks, blockSize>>>(n_subcomponents, subcomponents, partial_next_times);
+		gpu_next_time<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, partial_next_times);
 		// Wait for GPU to finish
 		cudaDeviceSynchronize();
 
 		// sequential minimum with partial results from GPU
 		next_time = partial_next_times[0];
 
-		for(size_t i = 0; i < blockSize; i++){
-			if(partial_next_times[i] < next_time) {
-				next_time = partial_next_times[i];
+//		if(n_subcomponents < blockSize) {
+/*			for(size_t i = 0; i < n_subcomponents; i++){
+				if(partial_next_times[i] < next_time) {
+					next_time = partial_next_times[i];
+				}
 			}
-		}
+*/
+//		} else {
+			for(size_t i = 1; i < numBlocks; i++){
+				if(partial_next_times[i] < next_time) {
+					next_time = partial_next_times[i];
+				}
+			}
+//		}
 		//end Step 4
 
+//		next_time++;
 		//printf("TIME: %lf", next_time);
 
 	}

@@ -37,10 +37,10 @@ void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, int* n_c
 	{
 		int tid = omp_get_thread_num();
 
-//		#pragma omp critical
-//		{
-//			pin_thread_to_core(tid);
-//		}
+		#pragma omp critical
+		{
+			pin_thread_to_core(tid);
+		}
 
 		double local_next_time;
 

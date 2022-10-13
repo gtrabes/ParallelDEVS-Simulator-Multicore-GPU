@@ -26,7 +26,7 @@
 
 #include <iostream>
 #include <chrono>
-#include "../modeling/atomic_gpu.hpp"
+#include "../modeling/atomic.hpp"
 #include "../simulation/sequential/sequential_root_coordinator.hpp"
 
 using namespace std;

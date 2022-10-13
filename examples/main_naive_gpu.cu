@@ -83,9 +83,9 @@ int main(int argc, char **argv) {
 	cudaMallocManaged(&atomic_array, n_atomics*sizeof(AtomicGPU));
 
 	for(size_t i = 0; i < n_atomics; i++) {
-//		atomic_array[i] = Atomic(output_flops, transition_flops);
+		atomic_array[i] = AtomicGPU(output_flops, transition_flops);
 	}
-/*
+
 	//create data structure for couplings
 	size_t **couplings;
 
@@ -97,8 +97,8 @@ int main(int argc, char **argv) {
 		//couplings[i] = (size_t *)malloc(9 * sizeof(size_t));
 		cudaMallocManaged(&couplings[i], 9*sizeof(size_t));
 	}
-*/
-/*
+
+
 	//create data structure for couplings
 	size_t *n_couplings;
 
@@ -106,9 +106,9 @@ int main(int argc, char **argv) {
 	//n_couplings = (int *)malloc(n_atomics * sizeof(int));
 	// Allocate Unified Memory -- accessible from CPU or GPU
 	cudaMallocManaged(&n_couplings, n_atomics*sizeof(size_t));
-*/
 
-/*
+
+
 	//fill data structure for couplings
 	for(size_t i=0; i < n_atomics; i++){
 		size_t aux = i-5;
@@ -119,14 +119,14 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
-*/
+
 
 	gpu_begin = hclock::now();
 
 	// Launch kernel on the GPU
 	//gpu_simulation<<<numBlocks, blockSize>>>(n_atomics, atomic_array, simulation_time);
 	//gpu_simulation(n_atomics, atomic_array, simulation_time);
-//	gpu_simulation(n_atomics, atomic_array, n_couplings, couplings, simulation_time);
+	gpu_simulation(n_atomics, atomic_array, n_couplings, couplings, simulation_time);
 
 	// Wait for GPU to finish before accessing on host
 	cudaDeviceSynchronize();
