@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
 		n_couplings[i] = 0;
 		size_t aux = i;
 		for(size_t j = 0; j < 9; j++){
-			couplings[i][j] = 0;
+//			couplings[i][j] = 0;
 			if (((aux+j) > 0) && ((aux+j) < n_atomics)){
 				couplings[i][j] = aux+j;
 				n_couplings[i]++;
