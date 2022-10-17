@@ -148,8 +148,11 @@
 		* @return the sigma value.
 		*/
 		void insert_in_bag(double in_message) {
-			in_bag[num_messages_received] = in_message;
-			num_messages_received++;
+			if(num_messages_received < 9){
+				in_bag[num_messages_received] = in_message;
+				num_messages_received++;
+			}
+
 		}
 
 		/**
