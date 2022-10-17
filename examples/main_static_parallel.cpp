@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
 
 	//fill data structure for couplings
 	for(size_t i=0; i < n_atomics; i++){
-		size_t aux = i-5;
+		size_t aux = i;
 		for(size_t j = 0; j < 9; j++){
 			if ((aux+j > 0) && (aux+j < n_atomics)){
 				couplings[i][j] = aux+j;

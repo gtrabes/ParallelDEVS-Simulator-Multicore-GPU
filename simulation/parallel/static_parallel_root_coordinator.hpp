@@ -36,7 +36,7 @@ void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t* 
 	//#pragma omp parallel num_threads(num_threads) shared(next_time, last_time, subcomponents, couplings)
 	#pragma omp parallel num_threads(num_threads) shared(next_time, last_time)
 	{
-		int tid = omp_get_thread_num();
+		size_t tid = omp_get_thread_num();
 
 		#pragma omp critical
 		{
