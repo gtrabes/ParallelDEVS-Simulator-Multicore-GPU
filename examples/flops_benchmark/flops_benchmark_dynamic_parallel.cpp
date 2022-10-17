@@ -26,9 +26,9 @@
 
 #include <iostream>
 #include <chrono>
-#include "../modeling/atomic_gpu.cuh"
-#include "../simulation/gpu/naive_gpu_root_coordinator.cuh"
-#include "../affinity/affinity_helpers.hpp"
+#include "../../modeling/atomic.hpp"
+#include "../../simulation/parallel/dynamic_parallel_root_coordinator.hpp"
+#include "../../affinity/affinity_helpers.hpp"
 
 using namespace std;
 using hclock=std::chrono::high_resolution_clock;
@@ -38,8 +38,7 @@ int main(int argc, char **argv) {
 	//pin core to thread 0
 	pin_thread_to_core(0);
 
-	auto sequential_begin = hclock::now(), parallel_begin = hclock::now(), gpu_begin = hclock::now();
-	auto sequential_end = hclock::now(), parallel_end = hclock::now(), gpu_end = hclock::now();
+	auto parallel_begin = hclock::now(), parallel_end = hclock::now();
 
 	// First, we parse the arguments
 	if (argc < 5) {
@@ -61,18 +60,24 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 	size_t transition_flops = std::stoll(argv[3]);
-	if (transition_flops < 1) {
-		std::cerr << "ERROR: TRANSITION_FLOPS is less than 1 (" << transition_flops << ")" << std::endl;
+	if (transition_flops < 0) {
+		std::cerr << "ERROR: TRANSITION_FLOPS is less than 0 (" << transition_flops << ")" << std::endl;
 		return -1;
 	}
 	size_t simulation_time = std::stoll(argv[4]);
-	if (simulation_time < 1) {
-		std::cerr << "ERROR: SIMULATION_TIME is less than 1 (" << simulation_time << ")" << std::endl;
+	if (transition_flops < 0) {
+		std::cerr << "ERROR: SIMULATION_TIME is less than 0 (" << simulation_time << ")" << std::endl;
+		return -1;
+	}
+	size_t num_threads = std::stoll(argv[5]);
+	if (num_threads < 1) {
+		std::cerr << "ERROR: NUMBER_OF_THREADS is less than 1 (" << num_threads << ")" << std::endl;
 		return -1;
 	}
 
+
 //	Atomic **atomic_pointers_array;
-	AtomicGPU *atomic_array;
+	Atomic *atomic_array;
 
 /*
 	 // Allocate Unified Memory -- accessible from CPU or GPU
@@ -82,34 +87,30 @@ int main(int argc, char **argv) {
 		cudaMallocManaged(&atomic_pointers_array[i], sizeof(Atomic));
 	}
 */
-
 	// Allocate Unified Memory -- accessible from CPU or GPU
-	cudaMallocManaged(&atomic_array, n_atomics*sizeof(AtomicGPU));
+	//cudaMallocManaged(&atomic_array, n_atomics*sizeof(Atomic));
+	atomic_array = (Atomic*) malloc(n_atomics*sizeof(Atomic));
+
 
 	for(size_t i = 0; i < n_atomics; i++) {
-		atomic_array[i] = AtomicGPU(output_flops, transition_flops);
+		atomic_array[i] = Atomic(output_flops, transition_flops);
 	}
 
 	//create data structure for couplings
 	size_t **couplings;
 
 	//allocate couplings matrix
-	//couplings = (size_t**)malloc(n_atomics * sizeof(size_t*));
-	cudaMallocManaged(&couplings, n_atomics*sizeof(size_t*));
+	couplings = (size_t**)malloc(n_atomics * sizeof(size_t*));
 
 	for(int i = 0; i < n_atomics; i++){
-		//couplings[i] = (size_t *)malloc(9 * sizeof(size_t));
-		cudaMallocManaged(&couplings[i], 9*sizeof(size_t));
+		couplings[i] = (size_t *)malloc(9 * sizeof(size_t));
 	}
-
 
 	//create data structure for couplings
 	size_t *n_couplings;
 
 	//allocate couplings matrix
-	//n_couplings = (int *)malloc(n_atomics * sizeof(int));
-	// Allocate Unified Memory -- accessible from CPU or GPU
-	cudaMallocManaged(&n_couplings, n_atomics*sizeof(size_t));
+	n_couplings = (size_t *)malloc(n_atomics * sizeof(size_t));
 
 	//fill data structure for couplings
 	for(size_t i = 0; i < n_atomics; i++){
@@ -124,21 +125,14 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	parallel_begin = hclock::now();
 
-	gpu_begin = hclock::now();
+	parallel_simulation(n_atomics, atomic_array, n_couplings, couplings, simulation_time, num_threads);
 
-	// Launch kernel on the GPU
-	//gpu_simulation<<<numBlocks, blockSize>>>(n_atomics, atomic_array, simulation_time);
-	//gpu_simulation(n_atomics, atomic_array, simulation_time);
-	gpu_simulation(n_atomics, atomic_array, n_couplings, couplings, simulation_time);
-
-	// Wait for GPU to finish before accessing on host
-	cudaDeviceSynchronize();
-
-	gpu_end = hclock::now();
+	parallel_end = hclock::now();
 
 	// calculate and print time
-	std::cout << "GPU parallel time: "<< std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(gpu_end - gpu_begin).count() << std::endl;
+	std::cout << "CPU parallel time: "<< std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(parallel_end - parallel_begin).count() << std::endl;
 
 	return 0;
 }

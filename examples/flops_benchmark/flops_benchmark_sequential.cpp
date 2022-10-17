@@ -26,9 +26,9 @@
 
 #include <iostream>
 #include <chrono>
-#include "../modeling/atomic.hpp"
-#include "../simulation/parallel/static_parallel_root_coordinator.hpp"
-//#include "../affinity/affinity_helpers.hpp"
+#include "../../modeling/atomic.hpp"
+#include "../../simulation/sequential/sequential_root_coordinator.hpp"
+#include "../../affinity/affinity_helpers.hpp"
 
 using namespace std;
 using hclock=std::chrono::high_resolution_clock;
@@ -56,8 +56,8 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 	size_t output_flops = std::stoll(argv[2]);
-	if (output_flops < 0) {
-		std::cerr << "ERROR: OUTPUT_FLOPS is less than 0 (" << output_flops << ")" << std::endl;
+	if (output_flops < 1) {
+		std::cerr << "ERROR: OUTPUT_FLOPS is less than 1 (" << output_flops << ")" << std::endl;
 		return -1;
 	}
 	size_t transition_flops = std::stoll(argv[3]);
@@ -70,12 +70,6 @@ int main(int argc, char **argv) {
 		std::cerr << "ERROR: SIMULATION_TIME is less than 0 (" << simulation_time << ")" << std::endl;
 		return -1;
 	}
-	size_t num_threads = std::stoll(argv[5]);
-	if (num_threads < 1) {
-		std::cerr << "ERROR: NUMBER_OF_THREADS is less than 1 (" << num_threads << ")" << std::endl;
-		return -1;
-	}
-
 
 //	Atomic **atomic_pointers_array;
 	Atomic *atomic_array;
@@ -106,16 +100,11 @@ int main(int argc, char **argv) {
 		couplings[i] = (size_t *)malloc(9 * sizeof(size_t));
 	}
 
-//	size_t couplings[n_atomics][9];
-
-
 	//create data structure for couplings
 	size_t *n_couplings;
 
 	//allocate couplings matrix
 	n_couplings = (size_t *)malloc(n_atomics * sizeof(size_t));
-
-//	size_t n_couplings[n_atomics];
 
 	//fill data structure for couplings
 	for(size_t i = 0; i < n_atomics; i++){
@@ -130,14 +119,14 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	parallel_begin = hclock::now();
+	sequential_begin = hclock::now();
 
-	parallel_simulation(n_atomics, atomic_array, n_couplings, couplings, simulation_time, num_threads);
+	sequential_simulation(n_atomics, atomic_array, n_couplings, couplings, simulation_time);
 
-	parallel_end = hclock::now();
+	sequential_end = hclock::now();
 
 	// calculate and print time
-	std::cout << "CPU parallel time: "<< std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(parallel_end - parallel_begin).count() << std::endl;
+	std::cout << "Sequential time:   "<< std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(sequential_end - sequential_begin).count() << std::endl;
 
 	return 0;
 }

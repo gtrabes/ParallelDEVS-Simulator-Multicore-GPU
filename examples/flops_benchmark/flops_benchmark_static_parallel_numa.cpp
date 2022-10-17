@@ -26,9 +26,9 @@
 
 #include <iostream>
 #include <chrono>
-#include "../modeling/atomic.hpp"
-#include "../simulation/parallel/naive_parallel_root_coordinator.hpp"
-//#include "../affinity/affinity_helpers.hpp"
+#include "../../modeling/atomic.hpp"
+#include "../../simulation/parallel/static_parallel_root_coordinator.hpp"
+#include "../../affinity/affinity_helpers.hpp"
 
 using namespace std;
 using hclock=std::chrono::high_resolution_clock;
@@ -56,8 +56,8 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 	size_t output_flops = std::stoll(argv[2]);
-	if (output_flops < 1) {
-		std::cerr << "ERROR: OUTPUT_FLOPS is less than 1 (" << output_flops << ")" << std::endl;
+	if (output_flops < 0) {
+		std::cerr << "ERROR: OUTPUT_FLOPS is less than 0 (" << output_flops << ")" << std::endl;
 		return -1;
 	}
 	size_t transition_flops = std::stoll(argv[3]);
@@ -92,10 +92,10 @@ int main(int argc, char **argv) {
 	//cudaMallocManaged(&atomic_array, n_atomics*sizeof(Atomic));
 	atomic_array = (Atomic*) malloc(n_atomics*sizeof(Atomic));
 
+	#pragma omp parallel for schedule(static)
 	for(size_t i = 0; i < n_atomics; i++) {
 		atomic_array[i] = Atomic(output_flops, transition_flops);
 	}
-
 
 	//create data structure for couplings
 	size_t **couplings;
@@ -107,13 +107,19 @@ int main(int argc, char **argv) {
 		couplings[i] = (size_t *)malloc(9 * sizeof(size_t));
 	}
 
+//	size_t couplings[n_atomics][9];
+
+
 	//create data structure for couplings
 	size_t *n_couplings;
 
 	//allocate couplings matrix
 	n_couplings = (size_t *)malloc(n_atomics * sizeof(size_t));
 
+//	size_t n_couplings[n_atomics];
+
 	//fill data structure for couplings
+	#pragma omp parallel for schedule(static)
 	for(size_t i = 0; i < n_atomics; i++){
 		n_couplings[i] = 0;
 		size_t aux = i-5;
@@ -133,7 +139,7 @@ int main(int argc, char **argv) {
 	parallel_end = hclock::now();
 
 	// calculate and print time
-	std::cout << "Naive parallel time: "<< std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(parallel_end - parallel_begin).count() << std::endl;
+	std::cout << "CPU parallel time: "<< std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(parallel_end - parallel_begin).count() << std::endl;
 
 	return 0;
 }

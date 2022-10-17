@@ -26,9 +26,9 @@
 
 #include <iostream>
 #include <chrono>
-#include "../modeling/atomic.hpp"
-#include "../simulation/sequential/sequential_root_coordinator.hpp"
-#include "../affinity/affinity_helpers.hpp"
+#include "../../modeling/atomic_gpu.cuh"
+#include "../../simulation/gpu/naive_gpu_root_coordinator.cuh"
+#include "../../affinity/affinity_helpers.hpp"
 
 using namespace std;
 using hclock=std::chrono::high_resolution_clock;
@@ -61,18 +61,18 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 	size_t transition_flops = std::stoll(argv[3]);
-	if (transition_flops < 0) {
-		std::cerr << "ERROR: TRANSITION_FLOPS is less than 0 (" << transition_flops << ")" << std::endl;
+	if (transition_flops < 1) {
+		std::cerr << "ERROR: TRANSITION_FLOPS is less than 1 (" << transition_flops << ")" << std::endl;
 		return -1;
 	}
 	size_t simulation_time = std::stoll(argv[4]);
-	if (transition_flops < 0) {
-		std::cerr << "ERROR: SIMULATION_TIME is less than 0 (" << simulation_time << ")" << std::endl;
+	if (simulation_time < 1) {
+		std::cerr << "ERROR: SIMULATION_TIME is less than 1 (" << simulation_time << ")" << std::endl;
 		return -1;
 	}
 
 //	Atomic **atomic_pointers_array;
-	Atomic *atomic_array;
+	AtomicGPU *atomic_array;
 
 /*
 	 // Allocate Unified Memory -- accessible from CPU or GPU
@@ -82,29 +82,34 @@ int main(int argc, char **argv) {
 		cudaMallocManaged(&atomic_pointers_array[i], sizeof(Atomic));
 	}
 */
+
 	// Allocate Unified Memory -- accessible from CPU or GPU
-	//cudaMallocManaged(&atomic_array, n_atomics*sizeof(Atomic));
-	atomic_array = (Atomic*) malloc(n_atomics*sizeof(Atomic));
+	cudaMallocManaged(&atomic_array, n_atomics*sizeof(AtomicGPU));
 
 	for(size_t i = 0; i < n_atomics; i++) {
-		atomic_array[i] = Atomic(output_flops, transition_flops);
+		atomic_array[i] = AtomicGPU(output_flops, transition_flops);
 	}
 
 	//create data structure for couplings
 	size_t **couplings;
 
 	//allocate couplings matrix
-	couplings = (size_t**)malloc(n_atomics * sizeof(size_t*));
+	//couplings = (size_t**)malloc(n_atomics * sizeof(size_t*));
+	cudaMallocManaged(&couplings, n_atomics*sizeof(size_t*));
 
-	for(size_t i = 0; i < n_atomics; i++){
-		couplings[i] = (size_t *)malloc(9 * sizeof(size_t));
+	for(int i = 0; i < n_atomics; i++){
+		//couplings[i] = (size_t *)malloc(9 * sizeof(size_t));
+		cudaMallocManaged(&couplings[i], 9*sizeof(size_t));
 	}
+
 
 	//create data structure for couplings
 	size_t *n_couplings;
 
 	//allocate couplings matrix
-	n_couplings = (size_t *)malloc(n_atomics * sizeof(size_t));
+	//n_couplings = (int *)malloc(n_atomics * sizeof(int));
+	// Allocate Unified Memory -- accessible from CPU or GPU
+	cudaMallocManaged(&n_couplings, n_atomics*sizeof(size_t));
 
 	//fill data structure for couplings
 	for(size_t i = 0; i < n_atomics; i++){
@@ -119,14 +124,21 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	sequential_begin = hclock::now();
 
-	sequential_simulation(n_atomics, atomic_array, n_couplings, couplings, simulation_time);
+	gpu_begin = hclock::now();
 
-	sequential_end = hclock::now();
+	// Launch kernel on the GPU
+	//gpu_simulation<<<numBlocks, blockSize>>>(n_atomics, atomic_array, simulation_time);
+	//gpu_simulation(n_atomics, atomic_array, simulation_time);
+	gpu_simulation(n_atomics, atomic_array, n_couplings, couplings, simulation_time);
+
+	// Wait for GPU to finish before accessing on host
+	cudaDeviceSynchronize();
+
+	gpu_end = hclock::now();
 
 	// calculate and print time
-	std::cout << "Sequential time:   "<< std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(sequential_end - sequential_begin).count() << std::endl;
+	std::cout << "GPU parallel time: "<< std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(gpu_end - gpu_begin).count() << std::endl;
 
 	return 0;
 }
