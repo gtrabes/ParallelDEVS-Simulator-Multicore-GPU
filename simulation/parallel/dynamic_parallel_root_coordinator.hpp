@@ -60,7 +60,8 @@ void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, int* n_c
 			#pragma omp for schedule(dynamic)
 			for(size_t i=0; i<n_subcomponents;i++){
 				for(int j=0; j<n_couplings[i]; j++ ){
-					subcomponents[i].insert_in_bag(subcomponents[couplings[i][j]].get_out_bag());
+					auto& bag = subcomponents[couplings[i][j]].get_out_bag();
+					subcomponents[i].insert_in_bag(bag);
 				}
 			}
 			#pragma omp barrier
