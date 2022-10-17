@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
 	}
 
 	//create data structure for couplings
-	int *n_couplings;
+	size_t *n_couplings;
 
 	//allocate couplings matrix
 	n_couplings = (size_t *)malloc(n_atomics * sizeof(size_t));

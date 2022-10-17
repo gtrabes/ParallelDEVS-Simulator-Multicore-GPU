@@ -27,7 +27,7 @@
 #include <thread>
 #include "parallel_helpers.hpp"
 
-void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, int* n_couplings, size_t** couplings, size_t sim_time,
+void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t* n_couplings, size_t** couplings, size_t sim_time,
 	size_t num_threads = std::thread::hardware_concurrency()) {
 
 	double next_time = 0, last_time = 0;

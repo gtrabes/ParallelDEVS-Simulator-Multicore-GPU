@@ -26,7 +26,7 @@
 
 #include <thread>
 
-void sequential_simulation(size_t n_subcomponents, Atomic* subcomponents, int* n_couplings, size_t** couplings , size_t sim_time) {
+void sequential_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t* n_couplings, size_t** couplings , size_t sim_time) {
 	double next_time = 0, last_time = 0;
 
 	while(next_time < sim_time) {
