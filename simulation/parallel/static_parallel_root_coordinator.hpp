@@ -33,7 +33,7 @@ void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t* 
 	double next_time = 0, last_time = 0;
 
 	//create threads
-	#pragma omp parallel num_threads(num_threads) shared(next_time, last_time, subcomponents)
+	#pragma omp parallel num_threads(num_threads) shared(next_time, last_time, subcomponents, couplings)
 	{
 		int tid = omp_get_thread_num();
 
