@@ -61,7 +61,9 @@ void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t* 
 			#pragma omp for schedule(static)
 			for(size_t i = 0; i < n_subcomponents;i++){
 				for(size_t j = 0; j < n_couplings[i]; j++ ){
-					size_t bag = couplings[i][j];
+					auto index = couplings[i][j];
+					auto out_bag = subcomponents[index].get_out_bag();
+					subcomponents[i].insert_in_bag(out_bag);
 					//subcomponents[i].insert_in_bag(subcomponents[0].get_out_bag());
 				}
 			}
