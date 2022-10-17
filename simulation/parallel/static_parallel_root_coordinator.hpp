@@ -63,7 +63,7 @@ void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t* 
 				for(size_t j = 0; j < n_couplings[i]; j++ ){
 					auto index = couplings[i][j];
 					auto out_bag = subcomponents[index].get_out_bag();
-					subcomponents[i].insert_in_bag(out_bag);
+					//subcomponents[i].insert_in_bag(out_bag);
 					//subcomponents[i].insert_in_bag(subcomponents[0].get_out_bag());
 				}
 			}
