@@ -56,10 +56,10 @@ void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, int* n_c
 			#pragma omp barrier
 			//end Step 1
 
-			// Step 2: execute output functions
+			// Step 2: route messages
 			#pragma omp for schedule(static)
 			for(size_t i=0; i<n_subcomponents;i++){
-				for(int j=0; j<n_couplings[i]; j++ ){
+				for(size_t j=0; j<n_couplings[i]; j++ ){
 					subcomponents[i].insert_in_bag(subcomponents[couplings[i][j]].get_out_bag());
 				}
 			}

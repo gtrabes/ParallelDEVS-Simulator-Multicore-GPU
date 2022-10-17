@@ -60,7 +60,7 @@ __global__ void gpu_route_messages(size_t n_subcomponents, AtomicGPU* subcompone
 
 	size_t i = blockIdx.x*blockDim.x + threadIdx.x;
 	if (i < n_subcomponents){
-		for(int j=0; j<n_couplings[i]; j++ ){
+		for(size_t j=0; j<n_couplings[i]; j++ ){
 			subcomponents[i].insert_in_bag(subcomponents[couplings[i][j]].get_out_bag());
 		}
 	}

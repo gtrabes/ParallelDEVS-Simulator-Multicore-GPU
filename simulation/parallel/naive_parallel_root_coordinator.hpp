@@ -33,14 +33,14 @@ void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, int* n_c
 	double next_time = 0, last_time = 0;
 
 	//create threads
-	#pragma omp parallel num_threads(8) shared(next_time, last_time, subcomponents)
+	#pragma omp parallel num_threads(num_threads) shared(next_time, last_time, subcomponents)
 	{
 		int tid = omp_get_thread_num();
 
-//		#pragma omp critical
-//		{
-//			pin_thread_to_core(tid);
-//		}
+		#pragma omp critical
+		{
+			pin_thread_to_core(tid);
+		}
 
 		double local_next_time;
 
@@ -60,7 +60,7 @@ void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, int* n_c
 			#pragma omp master
 			{
 				for(size_t i=0; i<n_subcomponents;i++){
-					for(int j=0; j<n_couplings[i]; j++ ){
+					for(size_t j=0; j<n_couplings[i]; j++ ){
 						subcomponents[i].insert_in_bag(subcomponents[couplings[i][j]].get_out_bag());
 					}
 				}

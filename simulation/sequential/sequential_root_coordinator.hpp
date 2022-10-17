@@ -41,7 +41,7 @@ void sequential_simulation(size_t n_subcomponents, Atomic* subcomponents, int* n
 
 		// Step 2: route messages
 		for(size_t i=0; i<n_subcomponents;i++){
-			for(int j=0; j<n_couplings[i]; j++ ){
+			for(size_t j=0; j<n_couplings[i]; j++ ){
 				subcomponents[i].insert_in_bag(subcomponents[couplings[i][j]].get_out_bag());
 			}
 		}
