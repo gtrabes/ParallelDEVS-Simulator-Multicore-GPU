@@ -87,6 +87,7 @@ int main(int argc, char **argv) {
 		atomic_array[i] = Atomic(output_flops, transition_flops);
 	}
 
+
 	//create data structure for couplings
 	size_t **couplings;
 
@@ -97,11 +98,17 @@ int main(int argc, char **argv) {
 		couplings[i] = (size_t *)malloc(9 * sizeof(size_t));
 	}
 
+//	size_t couplings[n_atomics][9];
+
+
 	//create data structure for couplings
 	size_t *n_couplings;
 
 	//allocate couplings matrix
 	n_couplings = (size_t *)malloc(n_atomics * sizeof(size_t));
+
+
+//	size_t n_couplings[n_atomics];
 
 	//fill data structure for couplings
 	for(size_t i = 0; i < n_atomics; i++){
