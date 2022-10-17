@@ -104,10 +104,10 @@ int main(int argc, char **argv) {
 	n_couplings = (size_t *)malloc(n_atomics * sizeof(size_t));
 
 	//fill data structure for couplings
-	for(size_t i=0; i < n_atomics; i++){
+	for(size_t i = 0; i < n_atomics; i++){
 		size_t aux = i;
 		for(size_t j = 0; j < 9; j++){
-			if ((aux+j > 0) && (aux+j < n_atomics)){
+			if (((aux+j) > 0) && ((aux+j) < n_atomics)){
 				couplings[i][j] = aux+j;
 				n_couplings[i]++;
 			}
