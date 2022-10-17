@@ -24,13 +24,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <vector>
-#include <functional>
-#include <chrono>
-#include <omp.h>
+#ifndef ATOMICX
+#define ATOMICX
+
 #include <thread>
 #include <algorithm>
-#include <array>
 
 void pin_thread_to_core(size_t tid){
 	size_t len, core;
@@ -128,3 +126,5 @@ void pin_thread_to_core_xeon(size_t tid){
 	if (sched_setaffinity(0, len, &mascara) < 0)
 		printf("\n\nError :: sched_setaffinity\n\n");
 }
+
+#endif

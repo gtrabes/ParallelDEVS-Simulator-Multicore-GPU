@@ -25,7 +25,8 @@
  */
 
 #include <thread>
-#include "parallel_helpers.hpp"
+#include "omp.h"
+#include "../../affinity/affinity_helpers.hpp"
 
 void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t* n_couplings, size_t** couplings, size_t sim_time,
 	size_t num_threads = std::thread::hardware_concurrency()) {

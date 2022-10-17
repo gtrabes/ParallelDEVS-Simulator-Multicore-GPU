@@ -28,11 +28,15 @@
 #include <chrono>
 #include "../modeling/atomic.hpp"
 #include "../simulation/parallel/static_parallel_root_coordinator.hpp"
+//#include "../affinity/affinity_helpers.hpp"
 
 using namespace std;
 using hclock=std::chrono::high_resolution_clock;
 
 int main(int argc, char **argv) {
+
+	//pin core to thread 0
+	pin_thread_to_core(0);
 
 	auto sequential_begin = hclock::now(), parallel_begin = hclock::now(), gpu_begin = hclock::now();
 	auto sequential_end = hclock::now(), parallel_end = hclock::now(), gpu_end = hclock::now();
@@ -52,8 +56,8 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 	size_t output_flops = std::stoll(argv[2]);
-	if (output_flops < 1) {
-		std::cerr << "ERROR: OUTPUT_FLOPS is less than 1 (" << output_flops << ")" << std::endl;
+	if (output_flops < 0) {
+		std::cerr << "ERROR: OUTPUT_FLOPS is less than 0 (" << output_flops << ")" << std::endl;
 		return -1;
 	}
 	size_t transition_flops = std::stoll(argv[3]);
@@ -66,6 +70,12 @@ int main(int argc, char **argv) {
 		std::cerr << "ERROR: SIMULATION_TIME is less than 0 (" << simulation_time << ")" << std::endl;
 		return -1;
 	}
+	size_t num_threads = std::stoll(argv[5]);
+	if (num_threads < 1) {
+		std::cerr << "ERROR: NUMBER_OF_THREADS is less than 1 (" << num_threads << ")" << std::endl;
+		return -1;
+	}
+
 
 //	Atomic **atomic_pointers_array;
 	Atomic *atomic_array;
@@ -82,11 +92,9 @@ int main(int argc, char **argv) {
 	//cudaMallocManaged(&atomic_array, n_atomics*sizeof(Atomic));
 	atomic_array = (Atomic*) malloc(n_atomics*sizeof(Atomic));
 
-
 	for(size_t i = 0; i < n_atomics; i++) {
 		atomic_array[i] = Atomic(output_flops, transition_flops);
 	}
-
 
 	//create data structure for couplings
 	size_t **couplings;
@@ -107,13 +115,12 @@ int main(int argc, char **argv) {
 	//allocate couplings matrix
 	n_couplings = (size_t *)malloc(n_atomics * sizeof(size_t));
 
-
 //	size_t n_couplings[n_atomics];
 
 	//fill data structure for couplings
 	for(size_t i = 0; i < n_atomics; i++){
 		n_couplings[i] = 0;
-		size_t aux = i;
+		size_t aux = i-5;
 		for(size_t j = 0; j < 9; j++){
 			couplings[i][j] = 0;
 			if (((aux+j) > 0) && ((aux+j) < n_atomics)){
@@ -125,7 +132,7 @@ int main(int argc, char **argv) {
 
 	parallel_begin = hclock::now();
 
-	parallel_simulation(n_atomics, atomic_array, n_couplings, couplings, simulation_time);
+	parallel_simulation(n_atomics, atomic_array, n_couplings, couplings, simulation_time, num_threads);
 
 	parallel_end = hclock::now();
 

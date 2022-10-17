@@ -28,11 +28,15 @@
 #include <chrono>
 #include "../modeling/atomic.hpp"
 #include "../simulation/sequential/sequential_root_coordinator.hpp"
+#include "../affinity/affinity_helpers.hpp"
 
 using namespace std;
 using hclock=std::chrono::high_resolution_clock;
 
 int main(int argc, char **argv) {
+
+	//pin core to thread 0
+	pin_thread_to_core(0);
 
 	auto sequential_begin = hclock::now(), parallel_begin = hclock::now(), gpu_begin = hclock::now();
 	auto sequential_end = hclock::now(), parallel_end = hclock::now(), gpu_end = hclock::now();
@@ -103,16 +107,17 @@ int main(int argc, char **argv) {
 	n_couplings = (size_t *)malloc(n_atomics * sizeof(size_t));
 
 	//fill data structure for couplings
-	for(size_t i=0; i < n_atomics; i++){
+	for(size_t i = 0; i < n_atomics; i++){
+		n_couplings[i] = 0;
 		size_t aux = i-5;
 		for(size_t j = 0; j < 9; j++){
-			if ((aux+j > 0) && (aux+j < n_atomics)){
+			couplings[i][j] = 0;
+			if (((aux+j) > 0) && ((aux+j) < n_atomics)){
 				couplings[i][j] = aux+j;
 				n_couplings[i]++;
 			}
 		}
 	}
-
 
 	sequential_begin = hclock::now();
 
