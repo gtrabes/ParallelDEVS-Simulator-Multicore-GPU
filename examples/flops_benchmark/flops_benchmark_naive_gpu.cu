@@ -26,7 +26,7 @@
 
 #include <iostream>
 #include <chrono>
-#include "../../modeling/atomic_gpu.cuh"
+#include "atomics/atomic_gpu.cuh"
 #include "../../simulation/gpu/naive_gpu_root_coordinator.cuh"
 #include "../../affinity/affinity_helpers.hpp"
 

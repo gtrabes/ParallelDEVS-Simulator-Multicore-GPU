@@ -26,7 +26,7 @@
 
 #include <iostream>
 #include <chrono>
-#include "../../modeling/atomic.hpp"
+#include "atomics/atomic.hpp"
 #include "../../simulation/parallel/dynamic_parallel_root_coordinator.hpp"
 #include "../../affinity/affinity_helpers.hpp"
 
