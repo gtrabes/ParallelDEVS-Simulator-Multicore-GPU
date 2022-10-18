@@ -192,6 +192,7 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 		}
 */
 
+		cudaSetDevice(tid);
 
 		size_t numBlocks = (local_n_subcomponents + threadsPerBlock - 1) / threadsPerBlock;
 		double *partial_next_times;
