@@ -45,9 +45,9 @@ __global__ void gpu_output(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* s
 
 
 
-__global__ void gpu_route_messages(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* subcomponents, size_t* n_couplings, size_t** couplings) {
+__global__ void gpu_route_messages(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* subcomponents, size_t first, size_t* n_couplings, size_t** couplings) {
 
-	size_t i = blockIdx.x*blockDim.x + threadIdx.x;
+	size_t i = first + (blockIdx.x*blockDim.x + threadIdx.x);
 	if (i < n_subcomponents){
 		for(size_t j=0; j<n_couplings[i]; j++ ){
 			subcomponents[i].insert_in_bag(subcomponents[couplings[i][j]].get_out_bag());
@@ -61,7 +61,7 @@ __global__ void gpu_route_messages(size_t n_subcomponents, CellDEVSBenchmarkAtom
 
 
 
-__global__ void gpu_transition(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* subcomponents, double next_time, double last_time) {
+__global__ void gpu_transition(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* subcomponents, size_t first, double next_time, double last_time) {
 	//printf("Hello World from GPU!\n");
 	//size_t index = blockIdx.x * blockDim.x + threadIdx.x;
 	//size_t stride = blockDim.x * gridDim.x;
@@ -71,7 +71,7 @@ __global__ void gpu_transition(size_t n_subcomponents, CellDEVSBenchmarkAtomicGP
 	//	subcomponents[i].internal_transition();
 	//}
 
-	size_t i = blockIdx.x*blockDim.x + threadIdx.x;
+	size_t i = first + (blockIdx.x*blockDim.x + threadIdx.x);
 
 	if (i < n_subcomponents){
 
@@ -104,10 +104,10 @@ __global__ void gpu_transition(size_t n_subcomponents, CellDEVSBenchmarkAtomicGP
 }
 
 
-__global__ void gpu_next_time(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* subcomponents, double* partial_next_times) {
+__global__ void gpu_next_time(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* subcomponents, size_t first, double* partial_next_times) {
 
 	__shared__ double blockCache[threadsPerBlock];
-	size_t tid = blockIdx.x*blockDim.x + threadIdx.x;
+	size_t tid = first + (blockIdx.x*blockDim.x + threadIdx.x);
 	size_t blockIndex = threadIdx.x;
 
 	//set blockCache values
@@ -173,6 +173,8 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 		size_t tid = omp_get_thread_num();
 		size_t num_threads = omp_get_num_threads();
 
+		double local_next_time = next_time;
+
 		//calculate number of elements to compute//
 		size_t local_n_subcomponents = n_subcomponents/num_threads;
 
@@ -191,7 +193,7 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 */
 
 
-		size_t numBlocks = (n_subcomponents + threadsPerBlock - 1) / threadsPerBlock;
+		size_t numBlocks = (local_n_subcomponents + threadsPerBlock - 1) / threadsPerBlock;
 		double *partial_next_times;
 
 		// Allocate Unified Memory -- accessible from CPU or GPU
@@ -206,31 +208,55 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 			//cudaDeviceSynchronize();
 			// End Step 1
 
+			#pragma omp barrier
+
 			// Launch Step 2 on the GPU
-			gpu_route_messages<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, n_couplings, couplings);
+			gpu_route_messages<<<numBlocks, threadsPerBlock>>>(local_n_subcomponents, subcomponents, first_subcomponents, n_couplings, couplings);
 			// Wait for GPU to finish
 			//cudaDeviceSynchronize();
 			// End Step 2
 
+			#pragma omp barrier
+
 			// Launch Step 3 on the GPU
-			gpu_transition<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, next_time, last_time);
+			gpu_transition<<<numBlocks, threadsPerBlock>>>(local_n_subcomponents, subcomponents, first_subcomponents, next_time, last_time);
 			// Wait for GPU to finish
 			//cudaDeviceSynchronize();
 			// End Step 3
 
+			#pragma omp barrier
+
 			// Launch Step 4 on the GPU
-			gpu_next_time<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, partial_next_times);
+			gpu_next_time<<<numBlocks, threadsPerBlock>>>(local_n_subcomponents, subcomponents, first_subcomponents, partial_next_times);
 			// Wait for GPU to finish
 			cudaDeviceSynchronize();
 
 			// sequential minimum with partial results from GPU
-			next_time = partial_next_times[0];
+			local_next_time = partial_next_times[0];
 
 			for(size_t i = 1; i < numBlocks; i++){
 				if(partial_next_times[i] < next_time) {
-					next_time = partial_next_times[i];
+					local_next_time = partial_next_times[i];
 				}
 			}
+			#pragma omp barrier
+
+			//only 1 threads initializes shared minimum wuth local minimum
+			#pragma omp single
+			{
+				next_time = local_next_time;
+			}
+
+			#pragma omp barrier
+
+			// calculate final result from partial_results sequentially /
+			#pragma omp critical
+			{
+				if(local_next_time < next_time){
+					next_time = local_next_time;
+				}
+			}
+			#pragma omp barrier
 
 		}//end loop
 
