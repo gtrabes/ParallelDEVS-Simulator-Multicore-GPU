@@ -188,6 +188,11 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 		int tid = omp_get_thread_num();
 		int num_threads = omp_get_num_threads();
 
+		#pragma omp critical
+		{
+			pin_thread_to_core(tid);
+		}
+
 //		cudaSetDevice(tid);
 
 // set and check the CUDA device for this CPU thread
@@ -195,9 +200,9 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 //        cudaSetDevice(cpu_thread_id % num_gpus);   // "% >
 //		#pragma omp critical
 //		{
-			cudaSetDevice(tid);
-        	cudaGetDevice(&gpu_id);
-        	printf("CPU thread %d (of %d) uses CUDA device %d\n", tid, num_threads, gpu_id);
+		cudaSetDevice(tid);
+        cudaGetDevice(&gpu_id);
+        printf("CPU thread %d (of %d) uses CUDA device %d\n", tid, num_threads, gpu_id);
 //		}
 
 
