@@ -163,19 +163,19 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
  		printf("no CUDA capable devices were detected\n");
  	}
 
- 	printf("number of host CPUs:\t%d\n", omp_get_num_procs());
- 	printf("number of CUDA devices:\t%d\n", num_gpus);
+// 	printf("number of host CPUs:\t%d\n", omp_get_num_procs());
+// 	printf("number of CUDA devices:\t%d\n", num_gpus);
 
 //	omp_set_num_threads(num_gpus);
 
-	for (int i = 0; i < num_gpus; i++)
-    {
-        cudaDeviceProp dprop;
-        cudaGetDeviceProperties(&dprop, i);
-        printf("   %d: %s\n", i, dprop.name);
-    }
+//	for (int i = 0; i < num_gpus; i++)
+//    {
+//        cudaDeviceProp dprop;
+//        cudaGetDeviceProperties(&dprop, i);
+//        printf("   %d: %s\n", i, dprop.name);
+ //   }
 
-    printf("---------------------------\n");
+ //   printf("---------------------------\n");
 
 //	omp_set_num_threads(num_gpus);
 

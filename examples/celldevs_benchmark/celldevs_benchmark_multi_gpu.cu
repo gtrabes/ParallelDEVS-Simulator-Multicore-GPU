@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
 	multi_gpu_simulation(n_atomics, atomic_array, n_couplings, couplings, simulation_time);
 
 	// Wait for GPU to finish before accessing on host
-	cudaDeviceSynchronize();
+	//cudaDeviceSynchronize();
 
 	gpu_end = hclock::now();
 
