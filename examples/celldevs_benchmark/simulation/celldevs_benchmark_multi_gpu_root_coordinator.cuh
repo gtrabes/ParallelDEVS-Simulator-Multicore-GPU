@@ -180,7 +180,8 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 	omp_set_num_threads(num_gpus);
 
 	//create parallel region//
-	#pragma omp parallel
+	//#pragma omp parallel
+	#pragma omp parallel num_threads(num_gpus) shared(next_time, last_time)
 	{
 
 		//each thread gets its id//
