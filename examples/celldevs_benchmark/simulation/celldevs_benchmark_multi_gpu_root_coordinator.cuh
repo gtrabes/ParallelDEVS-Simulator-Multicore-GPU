@@ -222,7 +222,7 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 //		int gpu_id = -1;;
 // 		cudaGetDevice(&gpu_id);
 
-    	printf("CPU thread %d (of %d) uses CUDA device %d\n", tid, num_gpus, gpu_id);
+//    	printf("CPU thread %d (of %d) uses CUDA device %d\n", tid, num_gpus, gpu_id);
 
 		size_t numBlocks = (local_n_subcomponents + threadsPerBlock - 1) / threadsPerBlock;
 		double *partial_next_times;
