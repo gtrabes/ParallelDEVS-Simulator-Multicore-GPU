@@ -166,8 +166,10 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
  	printf("number of host CPUs:\t%d\n", omp_get_num_procs());
  	printf("number of CUDA devices:\t%d\n", num_gpus);
 
+	omp_set_num_threads(num_gpus);
+
 	//create parallel region//
-	#pragma omp parallel num_threads(num_gpus) shared(next_time, last_time)
+	#pragma omp parallel shared(next_time, last_time)
 	{
 		//each thread gets its id//
 		size_t tid = omp_get_thread_num();
