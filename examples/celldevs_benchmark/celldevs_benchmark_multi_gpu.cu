@@ -36,7 +36,7 @@ using hclock=std::chrono::high_resolution_clock;
 int main(int argc, char **argv) {
 
 	//pin core to thread 0
-	pin_thread_to_core(0);
+//	pin_thread_to_core(0);
 
 	auto sequential_begin = hclock::now(), parallel_begin = hclock::now(), gpu_begin = hclock::now();
 	auto sequential_end = hclock::now(), parallel_end = hclock::now(), gpu_end = hclock::now();
