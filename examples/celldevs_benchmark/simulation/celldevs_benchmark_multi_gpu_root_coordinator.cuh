@@ -168,14 +168,36 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 
 //	omp_set_num_threads(num_gpus);
 
+	for (int i = 0; i < num_gpus; i++)
+    {
+        cudaDeviceProp dprop;
+        cudaGetDeviceProperties(&dprop, i);
+        printf("   %d: %s\n", i, dprop.name);
+    }
+
+    printf("---------------------------\n");
+
+	omp_set_num_threads(num_gpus);
+
 	//create parallel region//
-	#pragma omp parallel num_threads(8) shared(next_time, last_time)
+	#pragma omp parallel
 	{
 		//each thread gets its id//
-		size_t tid = omp_get_thread_num();
-		size_t num_threads = num_gpus;
+		unsigned int cpu_thread_id = omp_get_thread_num();
+		unsigned int num_cpu_threads = omp_get_num_threads();
 
-		cudaSetDevice(tid);
+		unsigned int tid = omp_get_thread_num();
+		unsigned int num_threads = omp_get_num_threads();
+
+//		cudaSetDevice(tid);
+
+// set and check the CUDA device for this CPU thread
+        int gpu_id = -1;
+        cudaSetDevice(cpu_thread_id % num_gpus);   // "% >
+        cudaGetDevice(&gpu_id);
+        printf("CPU thread %d (of %d) uses CUDA device %d\n", cpu_thread_id, num_cpu_threads, gpu_id);
+
+
 
 		double local_next_time = next_time;
 
@@ -197,8 +219,8 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 
 
 
-		int gpu_id = -1;;
- 		cudaGetDevice(&gpu_id);
+//		int gpu_id = -1;;
+// 		cudaGetDevice(&gpu_id);
 
     	printf("CPU thread %d (of %d) uses CUDA device %d\n", tid, num_gpus, gpu_id);
 
