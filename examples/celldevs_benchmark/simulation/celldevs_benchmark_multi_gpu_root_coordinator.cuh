@@ -204,7 +204,7 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 		while(next_time < simulation_time) {
 
 			// Launch Step 1 on the GPU
-			gpu_output<<<numBlocks, threadsPerBlock>>>(local_n_subcomponents, subcomponents, first_subcomponents, next_time);
+			gpu_output<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, first_subcomponents, next_time);
 			// Wait for GPU to finish
 			//cudaDeviceSynchronize();
 			// End Step 1
@@ -212,7 +212,7 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 			#pragma omp barrier
 
 			// Launch Step 2 on the GPU
-			gpu_route_messages<<<numBlocks, threadsPerBlock>>>(local_n_subcomponents, subcomponents, first_subcomponents, n_couplings, couplings);
+			gpu_route_messages<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, first_subcomponents, n_couplings, couplings);
 			// Wait for GPU to finish
 			//cudaDeviceSynchronize();
 			// End Step 2
@@ -220,7 +220,7 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 			#pragma omp barrier
 
 			// Launch Step 3 on the GPU
-			gpu_transition<<<numBlocks, threadsPerBlock>>>(local_n_subcomponents, subcomponents, first_subcomponents, next_time, last_time);
+			gpu_transition<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, first_subcomponents, next_time, last_time);
 			// Wait for GPU to finish
 			//cudaDeviceSynchronize();
 			// End Step 3
@@ -228,7 +228,7 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 			#pragma omp barrier
 
 			// Launch Step 4 on the GPU
-			gpu_next_time<<<numBlocks, threadsPerBlock>>>(local_n_subcomponents, subcomponents, first_subcomponents, partial_next_times);
+			gpu_next_time<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, first_subcomponents, partial_next_times);
 			// Wait for GPU to finish
 			cudaDeviceSynchronize();
 
