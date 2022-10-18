@@ -82,6 +82,7 @@ int main(int argc, char **argv) {
 	//allocate couplings matrix
 	couplings = (size_t**)malloc(n_atomics * sizeof(size_t*));
 
+	#pragma omp parallel for schedule(static)
 	for(size_t i = 0; i < n_atomics; i++){
 		couplings[i] = (size_t *)malloc(9 * sizeof(size_t));
 	}
@@ -95,6 +96,7 @@ int main(int argc, char **argv) {
 //	size_t n_couplings[n_atomics];
 
 	//fill data structure for couplings
+	#pragma omp parallel for schedule(static)
 	for(size_t i = 0; i < n_atomics; i++){
 		n_couplings[i] = 0;
 		size_t aux = i-5;
