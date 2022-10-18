@@ -177,16 +177,13 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 
     printf("---------------------------\n");
 
-//	omp_set_num_threads(3);
-	num_gpus = omp_get_num_procs();
+	omp_set_num_threads(num_gpus);
+
 	//create parallel region//
-	#pragma omp parallel shared(next_time, last_time, num_gpus)
+	#pragma omp parallel
 	{
 
 		//each thread gets its id//
-		int cpu_thread_id = omp_get_thread_num();
-		int num_cpu_threads = omp_get_num_threads();
-
 		int tid = omp_get_thread_num();
 		int num_threads = omp_get_num_threads();
 
@@ -199,9 +196,9 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 		{
 			cudaSetDevice(tid);
         	cudaGetDevice(&gpu_id);
-        	printf("CPU thread %d (of %d) uses CUDA device %d\n", cpu_thread_id, num_cpu_threads, gpu_id);
+        	printf("CPU thread %d (of %d) uses CUDA device %d\n", tid, num_threads, gpu_id);
 		}
-/*
+
 
 		double local_next_time = next_time;
 
@@ -294,7 +291,7 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 			#pragma omp barrier
 
 		}//end loop
-*/
+
 	}//end parallel section
 
 }//end function
