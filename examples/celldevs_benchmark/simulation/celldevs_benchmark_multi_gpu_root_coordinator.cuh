@@ -177,7 +177,7 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 
     printf("---------------------------\n");
 
-	omp_set_num_threads(num_gpus);
+//	omp_set_num_threads(num_gpus);
 
 	//create parallel region//
 	//#pragma omp parallel
@@ -193,12 +193,12 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 // set and check the CUDA device for this CPU thread
         int gpu_id = 0;
 //        cudaSetDevice(cpu_thread_id % num_gpus);   // "% >
-		#pragma omp critical
-		{
+//		#pragma omp critical
+//		{
 			cudaSetDevice(tid);
         	cudaGetDevice(&gpu_id);
         	printf("CPU thread %d (of %d) uses CUDA device %d\n", tid, num_threads, gpu_id);
-		}
+//		}
 
 
 		double local_next_time = next_time;
