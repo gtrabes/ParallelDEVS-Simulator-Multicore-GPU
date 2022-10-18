@@ -27,7 +27,7 @@
 #include <iostream>
 #include <chrono>
 #include "atomics/atomic.hpp"
-#include "simulation/parallel/naive_parallel_root_coordinator.hpp"
+#include "../../simulation/parallel/static_parallel_root_coordinator.hpp"
 #include "../../affinity/affinity_helpers.hpp"
 
 using namespace std;
