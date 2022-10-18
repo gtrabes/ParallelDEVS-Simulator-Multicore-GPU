@@ -25,8 +25,8 @@
  */
 
 #include <thread>
-#include <cmath>
 #include "omp.h"
+#include "../../../affinity/affinity_helpers.hpp"
 
 
 const int threadsPerBlock = 256;
@@ -166,7 +166,7 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
  	printf("number of host CPUs:\t%d\n", omp_get_num_procs());
  	printf("number of CUDA devices:\t%d\n", num_gpus);
 
-//	omp_set_num_threads(num_gpus);
+	omp_set_num_threads(num_gpus);
 
 	for (int i = 0; i < num_gpus; i++)
     {
@@ -177,11 +177,12 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 
     printf("---------------------------\n");
 
-	omp_set_num_threads(num_gpus);
+//	omp_set_num_threads(3);
 
 	//create parallel region//
-	#pragma omp parallel
+	#pragma omp parallel num_threads(2) shared(next_time, last_time)
 	{
+
 		//each thread gets its id//
 		unsigned int cpu_thread_id = omp_get_thread_num();
 		unsigned int num_cpu_threads = omp_get_num_threads();
@@ -193,11 +194,12 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 
 // set and check the CUDA device for this CPU thread
         int gpu_id = -1;
-        cudaSetDevice(cpu_thread_id % num_gpus);   // "% >
+//        cudaSetDevice(cpu_thread_id % num_gpus);   // "% >
+		cudaSetDevice(0);
         cudaGetDevice(&gpu_id);
         printf("CPU thread %d (of %d) uses CUDA device %d\n", cpu_thread_id, num_cpu_threads, gpu_id);
 
-
+/*
 
 		double local_next_time = next_time;
 
@@ -290,7 +292,7 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 			#pragma omp barrier
 
 		}//end loop
-
+*/
 	}//end parallel section
 
 }//end function

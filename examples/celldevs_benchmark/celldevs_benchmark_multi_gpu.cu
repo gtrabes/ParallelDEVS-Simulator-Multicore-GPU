@@ -27,7 +27,7 @@
 #include <iostream>
 #include <chrono>
 #include "atomics/celldevs_benchmark_atomic.cuh"
-#include "simulation/celldevs_benchmark_multi_gpu_root_coordinator.cuh"
+#include "simulation/celldevs_benchmark_multi_gpu_root_coordinator.cu"
 #include "../../affinity/affinity_helpers.hpp"
 
 using namespace std;
