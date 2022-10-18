@@ -31,10 +31,10 @@
 
 const int threadsPerBlock = 256;
 
-__global__ void gpu_output(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* subcomponents, size_t first, double next_time) {
+__global__ void gpu_output(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* subcomponents, size_t first, size_t last, double next_time) {
 
 	size_t i = first + (blockIdx.x*blockDim.x + threadIdx.x);
-	if (i < n_subcomponents){
+	if (i < last){
 		if (subcomponents[i].next_time == next_time) {
 			subcomponents[i].output();
 		}
@@ -45,10 +45,10 @@ __global__ void gpu_output(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* s
 
 
 
-__global__ void gpu_route_messages(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* subcomponents, size_t first, size_t* n_couplings, size_t** couplings) {
+__global__ void gpu_route_messages(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* subcomponents, size_t first, size_t last, size_t* n_couplings, size_t** couplings) {
 
 	size_t i = first + (blockIdx.x*blockDim.x + threadIdx.x);
-	if (i < n_subcomponents){
+	if (i < last){
 		for(size_t j=0; j<n_couplings[i]; j++ ){
 			subcomponents[i].insert_in_bag(subcomponents[couplings[i][j]].get_out_bag());
 		}
@@ -61,7 +61,7 @@ __global__ void gpu_route_messages(size_t n_subcomponents, CellDEVSBenchmarkAtom
 
 
 
-__global__ void gpu_transition(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* subcomponents, size_t first, double next_time, double last_time) {
+__global__ void gpu_transition(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* subcomponents, size_t first, size_t last, double next_time, double last_time) {
 	//printf("Hello World from GPU!\n");
 	//size_t index = blockIdx.x * blockDim.x + threadIdx.x;
 	//size_t stride = blockDim.x * gridDim.x;
@@ -73,7 +73,7 @@ __global__ void gpu_transition(size_t n_subcomponents, CellDEVSBenchmarkAtomicGP
 
 	size_t i = first + (blockIdx.x*blockDim.x + threadIdx.x);
 
-	if (i < n_subcomponents){
+	if (i < last){
 
 		if (subcomponents[i].next_time == next_time) {
 			if(subcomponents[i].inbag_empty() == true) {
@@ -104,14 +104,14 @@ __global__ void gpu_transition(size_t n_subcomponents, CellDEVSBenchmarkAtomicGP
 }
 
 
-__global__ void gpu_next_time(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* subcomponents, size_t first, double* partial_next_times) {
+__global__ void gpu_next_time(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* subcomponents, size_t first, size_t last, double* partial_next_times) {
 
 	__shared__ double blockCache[threadsPerBlock];
 	size_t tid = first + (blockIdx.x*blockDim.x + threadIdx.x);
 	size_t blockIndex = threadIdx.x;
 
 	//set blockCache values
-	if (tid < n_subcomponents){
+	if (tid < last){
 		blockCache[blockIndex] = subcomponents[tid].next_time;
 	}
 	//synchronize threads in this block
@@ -235,7 +235,7 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 		while(next_time < simulation_time) {
 
 			// Launch Step 1 on the GPU
-			gpu_output<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, first_subcomponents, next_time);
+			gpu_output<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, first_subcomponents, last_subcomponents, next_time);
 			// Wait for GPU to finish
 			//cudaDeviceSynchronize();
 			// End Step 1
@@ -243,7 +243,7 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 			#pragma omp barrier
 
 			// Launch Step 2 on the GPU
-			gpu_route_messages<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, first_subcomponents, n_couplings, couplings);
+			gpu_route_messages<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, first_subcomponents, last_subcomponents, n_couplings, couplings);
 			// Wait for GPU to finish
 			//cudaDeviceSynchronize();
 			// End Step 2
@@ -251,7 +251,7 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 			#pragma omp barrier
 
 			// Launch Step 3 on the GPU
-			gpu_transition<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, first_subcomponents, next_time, last_time);
+			gpu_transition<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, first_subcomponents, last_subcomponents, next_time, last_time);
 			// Wait for GPU to finish
 			//cudaDeviceSynchronize();
 			// End Step 3
@@ -259,7 +259,7 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 			#pragma omp barrier
 
 			// Launch Step 4 on the GPU
-			gpu_next_time<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, first_subcomponents, partial_next_times);
+			gpu_next_time<<<numBlocks, threadsPerBlock>>>(n_subcomponents, subcomponents, first_subcomponents, last_subcomponents, partial_next_times);
 			// Wait for GPU to finish
 			cudaDeviceSynchronize();
 
