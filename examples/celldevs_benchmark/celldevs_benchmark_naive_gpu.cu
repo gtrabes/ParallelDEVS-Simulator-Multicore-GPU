@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
 	gpu_end = hclock::now();
 
 	// calculate and print time
-	std::cout << "GPU parallel time: "<< std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(gpu_end - gpu_begin).count() << std::endl;
+	std::cout << std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(gpu_end - gpu_begin).count() << std::endl;
 
 	return 0;
 }

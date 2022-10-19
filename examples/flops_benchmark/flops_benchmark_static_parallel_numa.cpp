@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
 	parallel_end = hclock::now();
 
 	// calculate and print time
-	std::cout << "CPU parallel time: "<< std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(parallel_end - parallel_begin).count() << std::endl;
+	std::cout << std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(parallel_end - parallel_begin).count() << std::endl;
 
 	return 0;
 }

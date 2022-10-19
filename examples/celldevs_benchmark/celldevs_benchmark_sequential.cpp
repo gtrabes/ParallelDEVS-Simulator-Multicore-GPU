@@ -105,7 +105,10 @@ int main(int argc, char **argv) {
 	sequential_end = hclock::now();
 
 	// calculate and print time
-	std::cout << "Sequential time:   "<< std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(sequential_end - sequential_begin).count() << std::endl;
+	//std::cout << "Sequential time:   "<< std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(sequential_end - sequential_begin).count() << std::endl;
+
+	std::cout << std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(sequential_end - sequential_begin).count() << std::endl;
+
 
 	return 0;
 }
