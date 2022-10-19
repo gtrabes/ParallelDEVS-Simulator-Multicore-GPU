@@ -13,8 +13,6 @@ mkdir -p results
 
 ITERATION=0.0
 TIME_SEQUENTIAL=0.0
-TIME_NAIVE=0.0
-TIME_DYNAMIC=0.0
 TIME_STATIC=0.0
 TIME_STATIC_NUMA=0.0
 SIZE=1
@@ -26,7 +24,8 @@ for SIZE in ${DIM[@]}; do
     TIME_SEQUENTIAL=0.0
     TIME_STATIC=0.0
     TIME_NAIVE_GPU=0.0
-    TIME_GPU=0.0   
+    TIME_GPU=0.0
+    TIME_MULTI_GPU=0.0    
         
     echo "DIMENSION: $SIZE"
     echo "DIMENSION: $SIZE" >> $FILENAME
@@ -37,8 +36,6 @@ for SIZE in ${DIM[@]}; do
         ITERATION=$(bin/celldevs_benchmark_sequential $SIZE $TIME)
         echo $ITERATION
         TIME_SEQUENTIAL=$(echo "$TIME_SEQUENTIAL + $ITERATION" | bc -l)
-#        TIME_SEQUENTIAL=$(echo $TIME_SEQUENTIAL + $TIME | bc)
-#        TIME_SEQUENTIAL=$(($TIME_SEQUENTIAL + $ITERATOR))
     done
     
     TIME_SEQUENTIAL=$(echo "$TIME_SEQUENTIAL / $ITERATIONS" | bc -l)
@@ -80,6 +77,18 @@ for SIZE in ${DIM[@]}; do
     
     TIME_GPU=$(echo "$TIME_GPU / $ITERATIONS" | bc -l)
     echo $TIME_GPU >> $FILENAME
+    
+    echo "MULTIGPU"
+    echo "MULTIGPU" >> $FILENAME
+    for i in `seq 1 $ITERATIONS`; do
+        echo "ITERATION: ${i}"
+        ITERATION=$(./multi_gpu $SIZE $TIME)
+        echo $ITERATION
+        TIME_MULTI_GPU=$(echo "$TIME_MULTI_GPU + $ITERATION" | bc -l)
+    done
+    
+    TIME_MULTI_GPU=$(echo "$TIME_MULTI_GPU / $ITERATIONS" | bc -l)
+    echo $TIME_MULTI_GPU >> $FILENAME
     
     
 #    TWO=2

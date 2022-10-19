@@ -1,7 +1,7 @@
 #!/bin/bash
 
 MODEL=CellDEVSBenchmark
-COMPUTER=i7
+COMPUTER=Laptop
 FILENAME="./results/TimeGPU${MODEL}${COMPUTER}.csv"
 ITERATIONS=10
 THREADS=(2 4 8 16)
@@ -13,8 +13,6 @@ mkdir -p results
 
 ITERATION=0.0
 TIME_SEQUENTIAL=0.0
-TIME_NAIVE=0.0
-TIME_DYNAMIC=0.0
 TIME_STATIC=0.0
 TIME_STATIC_NUMA=0.0
 SIZE=1
@@ -37,8 +35,6 @@ for SIZE in ${DIM[@]}; do
         ITERATION=$(bin/celldevs_benchmark_sequential $SIZE $TIME)
         echo $ITERATION
         TIME_SEQUENTIAL=$(echo "$TIME_SEQUENTIAL + $ITERATION" | bc -l)
-#        TIME_SEQUENTIAL=$(echo $TIME_SEQUENTIAL + $TIME | bc)
-#        TIME_SEQUENTIAL=$(($TIME_SEQUENTIAL + $ITERATOR))
     done
     
     TIME_SEQUENTIAL=$(echo "$TIME_SEQUENTIAL / $ITERATIONS" | bc -l)
