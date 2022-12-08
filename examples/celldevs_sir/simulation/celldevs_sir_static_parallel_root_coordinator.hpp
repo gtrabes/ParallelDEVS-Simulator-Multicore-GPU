@@ -45,7 +45,7 @@ void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t* 
 
 		#pragma omp critical
 		{
-			pin_thread_to_core(tid);
+			pin_thread_to_core_xeon(tid);
 		}
 
 		double local_next_time;
