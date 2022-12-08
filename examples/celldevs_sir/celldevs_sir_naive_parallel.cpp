@@ -137,6 +137,7 @@ int main(int argc, char **argv) {
 
 		atomic_array[i].num_neighbors = n_couplings[i];
 	}
+
 	parallel_begin = hclock::now();
 
 	parallel_simulation(n_atomics, atomic_array, n_couplings, couplings, simulation_time, num_threads);

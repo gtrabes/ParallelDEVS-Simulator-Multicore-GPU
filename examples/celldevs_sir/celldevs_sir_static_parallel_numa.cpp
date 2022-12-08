@@ -94,6 +94,7 @@ int main(int argc, char **argv) {
 	CellDEVSSirAtomic *atomic_array;
 	atomic_array = (CellDEVSSirAtomic*) malloc(n_atomics*sizeof(CellDEVSSirAtomic));
 
+	#pragma omp parallel for schedule(static)
 	for(size_t i = 0; i < n_atomics; i++) {
 		atomic_array[i] = CellDEVSSirAtomic(100, 1.0, 0.0, 0.0);
 	}
@@ -119,6 +120,7 @@ int main(int argc, char **argv) {
 	int indexX = 0, indexY = 0, array_index = 0;
 
 	//fill data structure for couplings
+	#pragma omp parallel for schedule(static)
 	for(int i = 0; i < n_atomics; i++){
 		n_couplings[i] = 0;
 

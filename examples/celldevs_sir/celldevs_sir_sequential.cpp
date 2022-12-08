@@ -95,13 +95,13 @@ int main(int argc, char **argv) {
 	atomic_array[n_atomics/2] = CellDEVSSirAtomic(100, 0.9, 0.1, 0.0);
 
 	//create data structure for couplings
-	int **couplings;
+	size_t **couplings;
 
 	//allocate couplings matrix
-	couplings = (int**)malloc(n_atomics * sizeof(int*));
+	couplings = (size_t**)malloc(n_atomics * sizeof(size_t*));
 
 	for(int i = 0; i < n_atomics; i++){
-		couplings[i] = (int *)malloc(9 * sizeof(int));
+		couplings[i] = (size_t *)malloc(9 * sizeof(size_t));
 	}
 
 	//create data structure for couplings
