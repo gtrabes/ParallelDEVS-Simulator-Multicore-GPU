@@ -24,8 +24,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ATOMICX
-#define ATOMICX
+#ifndef AFFINITY
+#define AFFINITY
 
 #include <thread>
 #include <algorithm>
@@ -127,4 +127,4 @@ void pin_thread_to_core_xeon(size_t tid){
 		printf("\n\nError :: sched_setaffinity\n\n");
 }
 
-#endif
+#endif //end AFFINITY
