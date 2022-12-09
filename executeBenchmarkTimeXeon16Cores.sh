@@ -3,9 +3,9 @@
 MODEL=CellDEVSBenchmark
 COMPUTER=Xeon16Cores
 FILENAME="./results/Time${MODEL}${COMPUTER}.csv"
-ITERATIONS=2
+ITERATIONS=30
 THREADS=(2 4 8 16 32)
-TIME=1
+TIME=500
 DIM=(317 448 548 633 708 775 837 895 949 1000)
 
 sudo modprobe msr
@@ -54,7 +54,7 @@ for d in ${DIM[@]}; do
         bin/celldevs_benchmark_dynamic_parallel $d $TIME 32 >> $FILENAME
         #ITERATION=$(bin/celldevs_benchmark_dynamic_parallel $d $TIME 32)
         #echo $ITERATION
-        T#IME_DYNAMIC=$(echo "$TIME_DYNAMIC + $ITERATION" | bc -l)
+        #TIME_DYNAMIC=$(echo "$TIME_DYNAMIC + $ITERATION" | bc -l)
     done
     
     #TIME_DYNAMIC=$(echo "$TIME_DYNAMIC / $ITERATIONS" | bc -l)
