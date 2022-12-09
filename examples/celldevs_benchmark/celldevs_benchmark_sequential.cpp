@@ -30,6 +30,8 @@
 #include "simulation/celldevs_benchmark_sequential_root_coordinator.hpp"
 #include "../../affinity/affinity_helpers.hpp"
 #include <fstream>
+//#include "rapl-tools/Rapl.h"
+#include "../../rapl-tools/Rapl.h"
 
 using namespace std;
 using hclock=std::chrono::high_resolution_clock;
@@ -37,6 +39,7 @@ using hclock=std::chrono::high_resolution_clock;
 int main(int argc, char **argv) {
 
 	std::ofstream file;    //!< output file stream.
+	Rapl *rapl = new Rapl(0);
 
 	//pin core to thread 0
 	pin_thread_to_core(0);
@@ -130,7 +133,8 @@ int main(int argc, char **argv) {
 		//atomic_array[i].num_neighbors = n_couplings[i];
 	}
 
-	sequential_begin = hclock::now();
+	//sequential_begin = hclock::now();
+	rapl->measure_begin();
 
 	sequential_simulation(n_atomics, atomic_array, n_couplings, couplings, simulation_time);
 
@@ -142,13 +146,16 @@ int main(int argc, char **argv) {
 		file << simulation_time << ";" << i << ";" << "<" << grid_indexs[i][0] << "," << grid_indexs[i][1] << ">" << ";" << "<" << atomic_array[i].state << ">" << std::endl;
 	}
 
-
-	sequential_end = hclock::now();
+	//sequential_end = hclock::now();
+	rapl->measure_end();
 
 	// calculate and print time
 	//std::cout << "Sequential time:   "<< std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(sequential_end - sequential_begin).count() << std::endl;
 
-	std::cout << std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(sequential_end - sequential_begin).count() << std::endl;
+	//std::cout << std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(sequential_end - sequential_begin).count() << std::endl;
+
+	std::cout << rapl->total_time() << " " << rapl->total_energy() << " " << rapl->total_power() << " " << rapl->total_time()*rapl->total_energy() << std::endl;
+
 
 
 	return 0;

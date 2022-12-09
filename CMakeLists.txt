@@ -4,6 +4,10 @@ project(heterogeneous_devs LANGUAGES CXX CUDA)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
+file(MAKE_DIRECTORY logs)
+
+add_library(rapl rapl-tools/Rapl.cpp)
+
 add_executable(flops_benchmark_sequential ${CMAKE_CURRENT_SOURCE_DIR}/examples/flops_benchmark/flops_benchmark_sequential.cpp)
 add_executable(flops_benchmark_static_parallel ${CMAKE_CURRENT_SOURCE_DIR}/examples/flops_benchmark/flops_benchmark_static_parallel.cpp)
 add_executable(flops_benchmark_static_parallel_numa ${CMAKE_CURRENT_SOURCE_DIR}/examples/flops_benchmark/flops_benchmark_static_parallel_numa.cpp)
@@ -29,6 +33,21 @@ add_executable(celldevs_sir_dynamic_parallel ${CMAKE_CURRENT_SOURCE_DIR}/example
 add_executable(celldevs_sir_static_parallel_numa ${CMAKE_CURRENT_SOURCE_DIR}/examples/celldevs_sir/celldevs_sir_static_parallel_numa.cpp)
 #add_executable(celldevs_sir_naive_gpu ${CMAKE_CURRENT_SOURCE_DIR}/examples/celldevs_sir/celldevs_sir_naive_gpu.cu)
 #add_executable(celldevs_sir_multi_gpu ${CMAKE_CURRENT_SOURCE_DIR}/examples/celldevs_sir/celldevs_sir_multi_gpu.cu)
+
+    
+#target_link_libraries(synthetic PUBLIC ${Boost_LIBRARIES} rapl)
+
+target_link_libraries(celldevs_benchmark_sequential PUBLIC rapl)    
+target_link_libraries(celldevs_benchmark_naive_parallel PUBLIC rapl)
+target_link_libraries(celldevs_benchmark_static_parallel PUBLIC rapl)
+target_link_libraries(celldevs_benchmark_dynamic_parallel PUBLIC rapl)
+target_link_libraries(celldevs_benchmark_static_parallel_numa PUBLIC rapl)
+    
+target_link_libraries(celldevs_sir_sequential PUBLIC rapl)    
+target_link_libraries(celldevs_sir_naive_parallel PUBLIC rapl)
+target_link_libraries(celldevs_sir_static_parallel PUBLIC rapl)
+target_link_libraries(celldevs_sir_dynamic_parallel PUBLIC rapl)
+target_link_libraries(celldevs_sir_static_parallel_numa PUBLIC rapl)
 
 
 find_package(OpenMP)
