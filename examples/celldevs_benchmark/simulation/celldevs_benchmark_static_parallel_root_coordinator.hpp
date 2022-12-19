@@ -117,7 +117,7 @@ void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t* 
 				next_time = local_next_time;
 			}
 			#pragma omp barrier
-			#pragma omp critial
+			#pragma omp critical
 			{
 				if(local_next_time < next_time){
 					next_time = local_next_time;
