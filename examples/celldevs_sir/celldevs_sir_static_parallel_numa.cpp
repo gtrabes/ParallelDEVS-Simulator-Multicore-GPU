@@ -74,13 +74,13 @@ int main(int argc, char **argv) {
 	n_atomics = grid_dimension* grid_dimension;
 
 	//create data structure for indexes
-	int **grid_indexs;
+	size_t **grid_indexs;
 
 	//allocate matrix indexes
-	grid_indexs = (int**)malloc(n_atomics * sizeof(int*));
+	grid_indexs = (size_t**)malloc(n_atomics * sizeof(size_t*));
 
-	for(int i = 0; i < n_atomics; i++){
-		grid_indexs[i] = (int *)malloc(2 * sizeof(int));
+	for(size_t i = 0; i < n_atomics; i++){
+		grid_indexs[i] = (size_t *)malloc(2 * sizeof(size_t));
 	}
 
 	for(size_t i = 0; i < grid_dimension; i++) {
@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
 	//allocate couplings matrix
 	couplings = (size_t**)malloc(n_atomics * sizeof(size_t*));
 
-	for(int i = 0; i < n_atomics; i++){
+	for(size_t i = 0; i < n_atomics; i++){
 		couplings[i] = (size_t *)malloc(9 * sizeof(size_t));
 	}
 
@@ -121,11 +121,11 @@ int main(int argc, char **argv) {
 
 	//fill data structure for couplings
 	#pragma omp parallel for schedule(static)
-	for(int i = 0; i < n_atomics; i++){
+	for(size_t i = 0; i < n_atomics; i++){
 		n_couplings[i] = 0;
 
-		for(int j=-1; j<= 1; j++) {
-			for(int k=-1; k<= 1; k++) {
+		for(size_t j=-1; j<= 1; j++) {
+			for(size_t k=-1; k<= 1; k++) {
 				indexX = grid_indexs[i][0]+j;
 				indexY = grid_indexs[i][1]+k;
 

@@ -93,7 +93,7 @@
 		void internal_transition() {
 			if (lastState.s != state.s || lastState.i != state.i || lastState.r != state.r) {
 				lastState = state;
-				next_time = next_time+0.1;
+				next_time = next_time+1;
 			}
 		}
 
