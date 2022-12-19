@@ -48,29 +48,13 @@ void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t* 
 			pin_thread_to_core(tid);
 		}
 
-		size_t thread_number = omp_get_num_threads();
-
-        //calculate number of elements to compute//
-        size_t local_n_subcomponents = n_subcomponents/thread_number;
-
-        // calculate start position/
-        size_t first_subcomponents = tid*local_n_subcomponents;
-
-        // calculate end position/
-        size_t last_subcomponents;
-
-        if(tid != (thread_number-1)){
-            last_subcomponents = (tid+1)*local_n_subcomponents;
-        } else {
-            last_subcomponents = n_subcomponents;
-        }
-
 		double local_next_time;
 
 		while(next_time < sim_time) {
 
 			// Step 1: execute output functions
-			for(size_t i=first_subcomponents; i<last_subcomponents;i++){
+			#pragma omp for schedule(static)
+			for(size_t i=0; i<n_subcomponents;i++){
 				if (subcomponents[i].get_next_time() == next_time) {
 					subcomponents[i].output();
 				}
@@ -78,17 +62,14 @@ void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t* 
 			#pragma omp barrier
 			//end Step 1
 
-
 			// Step 2: route messages
-			//#pragma omp for schedule(static)
-			for(size_t i = first_subcomponents; i < last_subcomponents; i++){
+			#pragma omp for schedule(static)
+			for(size_t i = 0; i < n_subcomponents; i++){
 				for(size_t j = 0; j < n_couplings[i]; j++ ){
-					//for (size_t k=0; k < 10; k++){
-						auto index = couplings[i][j];
-						//if(index < n_subcomponents) {
+					auto index = couplings[i][j];
+					//if(index < n_subcomponents) {
 						auto out_bag = subcomponents[index].get_out_bag();
 						subcomponents[i].insert_in_bag(out_bag);
-					//}
 					//}
 						//subcomponents[i].insert_in_bag(subcomponents[couplings[i][j]].get_out_bag());
 
@@ -100,8 +81,8 @@ void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t* 
 			//end Step 2
 
 			//Step 3: execute state transition
-			//#pragma omp for schedule(static)
-			for(size_t i=first_subcomponents; i< last_subcomponents;i++){
+			#pragma omp for schedule(static)
+			for(size_t i=0; i<n_subcomponents;i++){
 				if (subcomponents[i].get_next_time() == next_time) {
 					if(subcomponents[i].inbag_empty() == true) {
 						subcomponents[i].internal_transition();
@@ -125,9 +106,9 @@ void parallel_simulation(size_t n_subcomponents, Atomic* subcomponents, size_t* 
 			//end Step 3
 
 			//Step 4
-			local_next_time = subcomponents[first_subcomponents].get_next_time();
-			//#pragma omp for schedule(static)
-			for(size_t i=first_subcomponents+1; i<last_subcomponents;i++){
+			local_next_time = subcomponents[0].get_next_time();
+			#pragma omp for schedule(static)
+			for(size_t i=1; i<n_subcomponents;i++){
 				if(subcomponents[i].get_next_time() < local_next_time){
 					local_next_time = subcomponents[i].get_next_time();
 				}
