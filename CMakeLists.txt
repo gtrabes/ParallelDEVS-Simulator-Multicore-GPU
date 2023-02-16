@@ -21,6 +21,10 @@ add_executable(celldevs_benchmark_static_parallel_numa ${CMAKE_CURRENT_SOURCE_DI
 add_executable(celldevs_benchmark_naive_gpu ${CMAKE_CURRENT_SOURCE_DIR}/examples/celldevs_benchmark/celldevs_benchmark_naive_gpu.cu)
 add_executable(celldevs_benchmark_multi_gpu ${CMAKE_CURRENT_SOURCE_DIR}/examples/celldevs_benchmark/celldevs_benchmark_multi_gpu.cu)
 
+add_executable(celldevs_sir_sequential ${CMAKE_CURRENT_SOURCE_DIR}/examples/celldevs_sir/celldevs_sir_sequential.cpp)
+add_executable(celldevs_sir_static_parallel_numa ${CMAKE_CURRENT_SOURCE_DIR}/examples/celldevs_sir/celldevs_sir_static_parallel_numa.cpp)
+add_executable(celldevs_sir_gpu ${CMAKE_CURRENT_SOURCE_DIR}/examples/celldevs_sir/celldevs_sir_gpu.cu)
+
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
     target_link_libraries(flops_benchmark_static_parallel PUBLIC OpenMP::OpenMP_CXX)
@@ -34,6 +38,8 @@ if(OpenMP_CXX_FOUND)
     target_link_libraries(celldevs_benchmark_static_parallel_numa PUBLIC OpenMP::OpenMP_CXX)
     target_link_libraries(celldevs_benchmark_multi_gpu PUBLIC OpenMP::OpenMP_CXX)
     
+    target_link_libraries(celldevs_sir_static_parallel_numa PUBLIC OpenMP::OpenMP_CXX)
+    
 endif()
 
 set_target_properties(flops_benchmark_gpu PROPERTIES CUDA_ARCHITECTURES "61;75")
@@ -42,3 +48,5 @@ set_target_properties(flops_benchmark_naive_gpu PROPERTIES CUDA_ARCHITECTURES "6
 set_target_properties(celldevs_benchmark_gpu PROPERTIES CUDA_ARCHITECTURES "61;75")
 set_target_properties(celldevs_benchmark_naive_gpu PROPERTIES CUDA_ARCHITECTURES "61;75")
 set_target_properties(celldevs_benchmark_multi_gpu PROPERTIES CUDA_ARCHITECTURES "61;75")
+
+set_target_properties(celldevs_sir_gpu PROPERTIES CUDA_ARCHITECTURES "61;75")
