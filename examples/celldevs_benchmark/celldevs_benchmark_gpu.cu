@@ -29,64 +29,73 @@
 #include "atomics/celldevs_benchmark_atomic.cuh"
 #include "simulation/celldevs_benchmark_gpu_root_coordinator.cuh"
 #include "../../affinity/affinity_helpers.hpp"
+#include <fstream>
 
 using namespace std;
 using hclock=std::chrono::high_resolution_clock;
 
 int main(int argc, char **argv) {
 
+	std::ofstream file;    //!< output file stream.
+
 	//pin core to thread 0
 	pin_thread_to_core(0);
 
-	auto sequential_begin = hclock::now(), parallel_begin = hclock::now(), gpu_begin = hclock::now();
-	auto sequential_end = hclock::now(), parallel_end = hclock::now(), gpu_end = hclock::now();
+	auto gpu_begin = hclock::now(), gpu_end = hclock::now();
 
 	// First, we parse the arguments
 	if (argc < 2) {
 		std::cerr << "ERROR: not enough arguments" << std::endl;
 		std::cerr << "    Usage:" << std::endl;
-		std::cerr << "    > devs-cuda ATOMICS_NUMBER OUTPUT_FLOPS_NUMBER TRANSITION_FLOPS SIMULATION_TIME" << std::endl;
-		std::cerr << "        (ATOMICS_NUMBER OUTPUT_FLOPS TRANSITION_FLOPS SIMULATION_TIME must be greater or equel to 1)" << std::endl;
+		std::cerr << "    > devs-cuda GRID_DIMENSIONS SIMULATION_TIME" << std::endl;
+		std::cerr << "        (GRID_DIMENSIONS SIMULATION_TIME must be greater or equel to 1)" << std::endl;
 		return -1;
 	}
 
-	size_t n_atomics = std::stoll(argv[1]);
-	if (n_atomics < 1) {
-		std::cerr << "ERROR: ATOMICS_NUMBER is less than 1 (" << n_atomics << ")" << std::endl;
+	size_t grid_dimension = std::stoll(argv[1]);
+	if (grid_dimension < 1) {
+		std::cerr << "ERROR: GRID_DIMENSION is less than 1 (" << grid_dimension << ")" << std::endl;
 		return -1;
 	}
 	size_t simulation_time = std::stoll(argv[2]);
-	if (simulation_time < 1) {
-		std::cerr << "ERROR: SIMULATION_TIME is less than 1 (" << simulation_time << ")" << std::endl;
+	if (simulation_time < 0) {
+		std::cerr << "ERROR: SIMULATION_TIME is less than 0 (" << simulation_time << ")" << std::endl;
 		return -1;
 	}
 
-//	Atomic **atomic_pointers_array;
+	size_t n_atomics;
 
+	n_atomics = grid_dimension* grid_dimension;
 
-/*
-	 // Allocate Unified Memory -- accessible from CPU or GPU
-	cudaMallocManaged(&atomic_pointers_array, size*sizeof(Atomic*));
+	//create data structure for indexes
+	int **grid_indexs;
 
-	for(size_t i = 0; i < size; i++) {
-		cudaMallocManaged(&atomic_pointers_array[i], sizeof(Atomic));
+	//allocate matrix indexes
+	grid_indexs = (int**)malloc(n_atomics * sizeof(int*));
+
+	for(int i = 0; i < n_atomics; i++){
+		grid_indexs[i] = (int *)malloc(2 * sizeof(int));
 	}
-*/
 
+	for(size_t i = 0; i < grid_dimension; i++) {
+		for(size_t j = 0; j < grid_dimension; j++) {
+			grid_indexs[(i*grid_dimension)+(j)][0] = i;
+			grid_indexs[(i*grid_dimension)+(j)][1] = j;
+		}
+	}
+
+//	Atomic **atomic_pointers_array;
 	CellDEVSBenchmarkAtomicGPU *atomic_array;
 
 	// Allocate Unified Memory -- accessible from CPU or GPU
 	cudaMallocManaged(&atomic_array, n_atomics*sizeof(CellDEVSBenchmarkAtomicGPU));
 
-
 	for(size_t i = 0; i < n_atomics; i++) {
 		atomic_array[i] = CellDEVSBenchmarkAtomicGPU();
-		//atomic_array[i].initialize(output_flops, transition_flops);
 	}
 
 	//create data structure for couplings
 	size_t **couplings;
-
 
 	//allocate couplings matrix
 	//couplings = (size_t**)malloc(n_atomics * sizeof(size_t*));
@@ -106,6 +115,9 @@ int main(int argc, char **argv) {
 	// Allocate Unified Memory -- accessible from CPU or GPU
 	cudaMallocManaged(&n_couplings, n_atomics*sizeof(size_t));
 
+	int indexX = 0, indexY = 0, array_index = 0;
+
+/*
 	//fill data structure for couplings
 	for(size_t i = 0; i < n_atomics; i++){
 		n_couplings[i] = 0;
@@ -118,6 +130,25 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
+*/
+
+	//fill data structure for couplings
+	for(int i = 0; i < n_atomics; i++){
+		n_couplings[i] = 0;
+		for(int j=-1; j<= 1; j++) {
+			for(int k=-1; k<= 1; k++) {
+				indexX = grid_indexs[i][0]+j;
+				indexY = grid_indexs[i][1]+k;
+
+				if (indexX >= 0 && indexX < grid_dimension && indexY >= 0 && indexY < grid_dimension) {
+					array_index = (indexX * grid_dimension)+(indexY);
+					couplings[i][n_couplings[i]] = array_index;
+					n_couplings[i]++;
+				}
+			}
+		}
+	}
+
 
 	gpu_begin = hclock::now();
 
@@ -128,6 +159,13 @@ int main(int argc, char **argv) {
 
 	// Wait for GPU to finish before accessing on host
 	cudaDeviceSynchronize();
+
+	file.open("cell_devs_benchmark_gpu_log.csv");
+	file << "time" << ";" << "model_id" << ";" << "model_name" << ";" << "state" << std::endl;
+
+	for(size_t i=0; i<n_atomics; i++){
+		file << simulation_time << ";" << i << ";" << "<" << grid_indexs[i][0] << "," << grid_indexs[i][1] << ">" << ";" << "<" << atomic_array[i].state << ">" << std::endl;
+	}
 
 	gpu_end = hclock::now();
 

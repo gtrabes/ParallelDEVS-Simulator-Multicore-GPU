@@ -196,13 +196,13 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 //		cudaSetDevice(tid);
 
 // set and check the CUDA device for this CPU thread
-        int gpu_id = 0;
+		int gpu_id = 0;
 //        cudaSetDevice(cpu_thread_id % num_gpus);   // "% >
 //		#pragma omp critical
 //		{
 		cudaSetDevice(tid);
-        cudaGetDevice(&gpu_id);
-        printf("CPU thread %d (of %d) uses CUDA device %d\n", tid, num_threads, gpu_id);
+		cudaGetDevice(&gpu_id);
+//		printf("CPU thread %d (of %d) uses CUDA device %d\n", tid, num_threads, gpu_id);
 //		}
 
 
@@ -223,8 +223,6 @@ void multi_gpu_simulation(size_t n_subcomponents, CellDEVSBenchmarkAtomicGPU* su
 		} else {
 			last_subcomponents = n_subcomponents;
 		}
-
-
 
 //		int gpu_id = -1;;
 // 		cudaGetDevice(&gpu_id);

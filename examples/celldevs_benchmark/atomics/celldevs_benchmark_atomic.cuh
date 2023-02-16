@@ -18,6 +18,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#ifndef CELL_DEVS_BENCHMARK_ATOMIC_GPU
+#define CELL_DEVS_BENCHMARK_ATOMIC_GPU
+
 	/**
 	 * @brief DEVS atomic model.
 	 *
@@ -169,3 +172,5 @@
 		}
 
     };
+
+#endif //CADMIUM_CORE_SIMULATION_ABS_SIMULATOR_HPP_
