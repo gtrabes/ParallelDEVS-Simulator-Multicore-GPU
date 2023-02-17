@@ -71,7 +71,7 @@ for SIZE in ${DIM[@]}; do
     echo "MULTIGPU" >> $FILENAME
     for i in `seq 1 $ITERATIONS`; do
         echo "ITERATION: ${i}"
-        ITERATION=$(./celldevs_sir_multi_gpu $SIZE $TIME)
+        ITERATION=$(bin/celldevs_sir_multi_gpu $SIZE $TIME)
         echo $ITERATION
         TIME_MULTI_GPU=$(echo "$TIME_MULTI_GPU + $ITERATION" | bc -l)
     done
