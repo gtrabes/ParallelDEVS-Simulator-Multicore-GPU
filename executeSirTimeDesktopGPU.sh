@@ -17,8 +17,8 @@ for SIZE in ${DIM[@]}; do
     TIME_GPU=0.0
     TIME_MULTI_GPU=0.0    
         
-#    echo "DIMENSION: $SIZE"
-#    echo "DIMENSION: $SIZE" >> $FILENAME
+    echo "DIMENSION: $SIZE"
+    echo "DIMENSION: $SIZE" >> $FILENAME
 #    echo "SEQUENTIAL"
 #    echo "SEQUENTIAL" >> $FILENAME
 #    for i in `seq 1 $ITERATIONS`; do
