@@ -1,0 +1,3 @@
+[submodule "nvml_examples"]
+	path = nvml_examples
+	url = https://github.com/mnicely/nvml_examples
