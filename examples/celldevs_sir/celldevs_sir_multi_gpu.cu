@@ -30,6 +30,7 @@
 #include "simulation/celldevs_sir_multi_gpu_root_coordinator.cuh"
 #include "../../affinity/affinity_helpers.hpp"
 #include <fstream>
+#include "../../rapl-tools/Rapl.h"
 
 using namespace std;
 using hclock=std::chrono::high_resolution_clock;
@@ -37,6 +38,9 @@ using hclock=std::chrono::high_resolution_clock;
 int main(int argc, char **argv) {
 
 	std::ofstream file;    //!< output file stream.
+
+	Rapl *rapl = new Rapl(0);
+
 	//pin core to thread 0
 	pin_thread_to_core(0);
 
@@ -138,7 +142,8 @@ int main(int argc, char **argv) {
 
 
 
-	multi_gpu_begin = hclock::now();
+	//multi_gpu_begin = hclock::now();
+	rapl->measure_begin();
 
 	// Launch kernel on the GPU
 	//gpu_simulation<<<numBlocks, blockSize>>>(n_atomics, atomic_array, simulation_time);
@@ -157,10 +162,12 @@ int main(int argc, char **argv) {
 	}
 
 
-	multi_gpu_end = hclock::now();
+	//multi_gpu_end = hclock::now()
+	rapl->measure_end();;
 
 	// calculate and print time
-	std::cout << std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(multi_gpu_end - multi_gpu_begin).count() << std::endl;
+	//std::cout << std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(multi_gpu_end - multi_gpu_begin).count() << std::endl;
+	std::cout << rapl->total_time() << " " << rapl->total_energy() << " " << rapl->total_power() << " " << rapl->total_time()*rapl->total_energy() << std::endl;
 
 	return 0;
 }

@@ -31,7 +31,6 @@
 #include "../../affinity/affinity_helpers.hpp"
 #include <fstream>
 #include "../../rapl-tools/Rapl.h"
-#include "omp.h"
 
 using namespace std;
 using hclock=std::chrono::high_resolution_clock;
