@@ -4,6 +4,11 @@ project(heterogeneous_devs LANGUAGES CXX CUDA)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
+file(MAKE_DIRECTORY logs)
+
+add_library(rapl rapl-tools/Rapl.cpp)
+
+
 add_executable(flops_benchmark_sequential ${CMAKE_CURRENT_SOURCE_DIR}/examples/flops_benchmark/flops_benchmark_sequential.cpp)
 add_executable(flops_benchmark_static_parallel ${CMAKE_CURRENT_SOURCE_DIR}/examples/flops_benchmark/flops_benchmark_static_parallel.cpp)
 add_executable(flops_benchmark_static_parallel_numa ${CMAKE_CURRENT_SOURCE_DIR}/examples/flops_benchmark/flops_benchmark_static_parallel_numa.cpp)
@@ -27,6 +32,12 @@ add_executable(celldevs_sir_naive_gpu ${CMAKE_CURRENT_SOURCE_DIR}/examples/celld
 add_executable(celldevs_sir_gpu ${CMAKE_CURRENT_SOURCE_DIR}/examples/celldevs_sir/celldevs_sir_gpu.cu)
 add_executable(celldevs_sir_multi_gpu ${CMAKE_CURRENT_SOURCE_DIR}/examples/celldevs_sir/celldevs_sir_multi_gpu.cu)
 
+target_link_libraries(celldevs_benchmark_gpu PUBLIC rapl)
+target_link_libraries(celldevs_sir_gpu PUBLIC rapl)
+target_link_libraries(celldevs_benchmark_multi_gpu PUBLIC rapl)
+target_link_libraries(celldevs_sir_multi_gpu PUBLIC rapl)
+
+
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
     target_link_libraries(flops_benchmark_static_parallel PUBLIC OpenMP::OpenMP_CXX)
@@ -45,8 +56,8 @@ if(OpenMP_CXX_FOUND)
     
 endif()
 
-target_compile_options(celldevs_benchmark_multi_gpu PRIVATE -Xcompiler)
-target_compile_options(celldevs_sir_multi_gpu PRIVATE -Xcompiler)
+target_compile_options(celldevs_benchmark_multi_gpu PUBLIC -Xcompiler)
+target_compile_options(celldevs_sir_multi_gpu PUBLIC -Xcompiler)
 
 set_target_properties(flops_benchmark_gpu PROPERTIES CUDA_ARCHITECTURES "61;75")
 set_target_properties(flops_benchmark_naive_gpu PROPERTIES CUDA_ARCHITECTURES "61;75")

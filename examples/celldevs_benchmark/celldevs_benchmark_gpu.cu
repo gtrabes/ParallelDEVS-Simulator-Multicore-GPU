@@ -31,6 +31,9 @@
 #include "../../affinity/affinity_helpers.hpp"
 #include <fstream>
 
+#include "../../rapl-tools/Rapl.h"
+
+
 /* Includes, custom */
 #include "../../nvml_examples/nvmlClass.h"
 
@@ -41,6 +44,8 @@ using hclock=std::chrono::high_resolution_clock;
 int main(int argc, char **argv) {
 
 	std::ofstream file;    //!< output file stream.
+
+	Rapl *rapl = new Rapl(0);
 
 	//pin core to thread 0
 	pin_thread_to_core(0);
@@ -154,7 +159,8 @@ int main(int argc, char **argv) {
 	}
 
 
-	gpu_begin = hclock::now();
+	//gpu_begin = hclock::now();
+	rapl->measure_begin();
 
 	// Launch kernel on the GPU
 	//gpu_simulation<<<numBlocks, blockSize>>>(n_atomics, atomic_array, simulation_time);
@@ -171,10 +177,12 @@ int main(int argc, char **argv) {
 		file << simulation_time << ";" << i << ";" << "<" << grid_indexs[i][0] << "," << grid_indexs[i][1] << ">" << ";" << "<" << atomic_array[i].state << ">" << std::endl;
 	}
 
-	gpu_end = hclock::now();
+	//gpu_end = hclock::now();
+	rapl->measure_end();
 
 	// calculate and print time
-	std::cout << std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(gpu_end - gpu_begin).count() << std::endl;
+	//std::cout << std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(gpu_end - gpu_begin).count() << std::endl;
+	std::cout << rapl->total_time() << " " << rapl->total_energy() << " " << rapl->total_power() << " " << rapl->total_time()*rapl->total_energy() << std::endl;
 
 	return 0;
 }
