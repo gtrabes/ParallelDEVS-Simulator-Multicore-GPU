@@ -31,6 +31,10 @@
 #include "../../affinity/affinity_helpers.hpp"
 #include <fstream>
 
+/* Includes, custom */
+#include "../../nvml_examples/nvmlClass.h"
+
+
 using namespace std;
 using hclock=std::chrono::high_resolution_clock;
 
