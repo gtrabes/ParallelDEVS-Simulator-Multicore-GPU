@@ -15,7 +15,7 @@ mkdir -p results
 
 
 
-for FREQ in ${FREQUENCIES[@]}
+for FREQ in ${FREQUENCIES[@]}; do
     for TIME in ${TIMES[@]}; do
 
         echo "FREQUENCY: $FREQUENCY"
